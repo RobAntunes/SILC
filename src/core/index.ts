@@ -1,6 +1,6 @@
 /**
  * SILC Protocol Core Module
- * 
+ *
  * Core components for the SILC protocol including the main protocol class,
  * configuration management, message building, and error handling.
  */
@@ -10,13 +10,13 @@ export { SILCProtocol } from './protocol';
 
 // Configuration management
 export type { SILCConfig } from './config';
-export { 
+export {
   ConfigBuilder,
   ConfigLoader,
   PRODUCTION_CONFIG,
   DEVELOPMENT_CONFIG,
   TEST_CONFIG,
-  DEFAULT_CONFIG 
+  DEFAULT_CONFIG,
 } from './config';
 
 // Message building
@@ -26,40 +26,45 @@ export { MessageBuilder } from './message-builder';
 export { SILCError, ErrorFactory, ErrorHandler } from './errors';
 
 // Convenience exports
-export type { 
+export type {
   ISILCMessage,
   ISILCHeader,
   SILCAgentID,
   SILCMessageType,
   MessageBuilderConfig,
   DialectExtension,
-  MessageMetadata
+  MessageMetadata,
 } from '../types/message.types';
 
 /**
  * Create a SILC protocol instance with sensible defaults
  */
-export function createSILCProtocol(options: {
-  agentId?: {
-    namespace: string;
-    modelType: string;
-    instanceId?: string;
-  };
-  debug?: boolean;
-  compressionLevel?: number;
-  environment?: 'development' | 'production' | 'test';
-} = {}) {
+export function createSILCProtocol(
+  options: {
+    agentId?: {
+      namespace: string;
+      modelType: string;
+      instanceId?: string;
+    };
+    debug?: boolean;
+    compressionLevel?: number;
+    environment?: 'development' | 'production' | 'test';
+  } = {},
+) {
   const { ConfigBuilder, PRODUCTION_CONFIG, TEST_CONFIG, DEVELOPMENT_CONFIG } = require('./config');
   const { SILCProtocol } = require('./protocol');
-  
-  const config = ConfigBuilder
-    .from(options.environment === 'production' ? PRODUCTION_CONFIG :
-          options.environment === 'test' ? TEST_CONFIG :
-          DEVELOPMENT_CONFIG)
+
+  const config = ConfigBuilder.from(
+    options.environment === 'production'
+      ? PRODUCTION_CONFIG
+      : options.environment === 'test'
+        ? TEST_CONFIG
+        : DEVELOPMENT_CONFIG,
+  )
     .withAgent({
       namespace: options.agentId?.namespace ?? 'default',
       modelType: options.agentId?.modelType ?? 'unknown',
-      instanceId: options.agentId?.instanceId ?? `instance-${Date.now()}`
+      instanceId: options.agentId?.instanceId ?? `instance-${Date.now()}`,
     })
     .withDebug(options.debug ?? false)
     .withCompression(options.compressionLevel ?? 6)
@@ -79,7 +84,7 @@ export async function quickStart(agentInfo: {
   const protocol = createSILCProtocol({
     agentId: agentInfo,
     environment: 'development',
-    debug: true
+    debug: true,
   });
 
   await protocol.initialize();

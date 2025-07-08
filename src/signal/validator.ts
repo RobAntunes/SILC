@@ -1,16 +1,16 @@
 /**
  * SILC Signal Validation Utilities
- * 
+ *
  * Comprehensive validation for SILC signals including parameter ranges,
  * mathematical patterns, and quality assessment.
  */
 
-import type { 
-  ISILCSignal, 
-  SignalValidationResult, 
-  SignalQualityMetrics 
+import type {
+  ISILCSignal,
+  SignalQualityMetrics,
+  SignalValidationResult,
 } from '../types/signal.types';
-import { SILCErrorCategory, ErrorSeverity } from '../types/common.types';
+import { ErrorSeverity, SILCErrorCategory } from '../types/common.types';
 import { SILCError } from '../core/errors';
 
 /**
@@ -19,16 +19,16 @@ import { SILCError } from '../core/errors';
 export interface ValidationConfig {
   /** Strict mode - fail on warnings */
   strict: boolean;
-  
+
   /** Enable mathematical pattern detection */
   detectPatterns: boolean;
-  
+
   /** Maximum allowed harmonics */
   maxHarmonics: number;
-  
+
   /** Tolerance for phase validation */
   phaseTolerance: number;
-  
+
   /** Enable quality scoring */
   enableQualityScoring: boolean;
 }
@@ -41,7 +41,7 @@ const DEFAULT_CONFIG: ValidationConfig = {
   detectPatterns: true,
   maxHarmonics: 100,
   phaseTolerance: 0.1,
-  enableQualityScoring: true
+  enableQualityScoring: true,
 };
 
 /**
@@ -53,9 +53,9 @@ export const MathematicalPatterns = {
   PI: 3.141592653589,
   SQRT_2: 1.414213562373,
   SQRT_3: 1.732050807568,
-  FIBONACCI_RATIOS: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55].map((n, i, arr) => 
-    i === 0 ? 1 : n / (arr[i - 1] ?? 1)
-  )
+  FIBONACCI_RATIOS: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55].map((n, i, arr) =>
+    i === 0 ? 1 : n / (arr[i - 1] ?? 1),
+  ),
 } as const;
 
 /**
@@ -109,7 +109,7 @@ export class SignalValidator {
       valid: allIssues.length === 0,
       errors,
       warnings,
-      quality: Math.max(0, Math.min(1, quality))
+      quality: Math.max(0, Math.min(1, quality)),
     };
   }
 
@@ -149,11 +149,12 @@ export class SignalValidator {
       qualityMultiplier *= 0.5;
     } else {
       // Check if phase is close to canonical values (0 or π)
-      const normalizedPhase = ((signal.phase % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
-      const isCanonical = Math.abs(normalizedPhase) < this.config.phaseTolerance || 
-                         Math.abs(normalizedPhase - Math.PI) < this.config.phaseTolerance ||
-                         Math.abs(normalizedPhase - 2 * Math.PI) < this.config.phaseTolerance;
-      
+      const normalizedPhase = ((signal.phase % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      const isCanonical =
+        Math.abs(normalizedPhase) < this.config.phaseTolerance ||
+        Math.abs(normalizedPhase - Math.PI) < this.config.phaseTolerance ||
+        Math.abs(normalizedPhase - 2 * Math.PI) < this.config.phaseTolerance;
+
       if (!isCanonical) {
         warnings.push(`Non-canonical phase ${signal.phase} (not close to 0 or π)`);
         qualityMultiplier *= 0.95;
@@ -180,17 +181,18 @@ export class SignalValidator {
 
     // Check for mathematical constants in harmonics
     if (signal.harmonics) {
-      const hasGoldenRatio = signal.harmonics.some(h => 
-        this.isCloseToValue(h, MathematicalPatterns.GOLDEN_RATIO, 0.01) ||
-        this.isCloseToValue(h, 1 / MathematicalPatterns.GOLDEN_RATIO, 0.01)
+      const hasGoldenRatio = signal.harmonics.some(
+        (h) =>
+          this.isCloseToValue(h, MathematicalPatterns.GOLDEN_RATIO, 0.01) ||
+          this.isCloseToValue(h, 1 / MathematicalPatterns.GOLDEN_RATIO, 0.01),
       );
-      
-      const hasEuler = signal.harmonics.some(h => 
-        this.isCloseToValue(h, MathematicalPatterns.EULER, 0.01)
+
+      const hasEuler = signal.harmonics.some((h) =>
+        this.isCloseToValue(h, MathematicalPatterns.EULER, 0.01),
       );
-      
-      const hasPi = signal.harmonics.some(h => 
-        this.isCloseToValue(h, MathematicalPatterns.PI, 0.01)
+
+      const hasPi = signal.harmonics.some((h) =>
+        this.isCloseToValue(h, MathematicalPatterns.PI, 0.01),
       );
 
       if (hasGoldenRatio || hasEuler || hasPi) {
@@ -227,7 +229,7 @@ export class SignalValidator {
     // Validate individual harmonics
     for (let i = 0; i < harmonics.length; i++) {
       const harmonic = harmonics[i];
-      
+
       if (!Number.isFinite(harmonic)) {
         errors.push(`Invalid harmonic at index ${i}: ${harmonic}`);
         qualityMultiplier *= 0.8;
@@ -371,7 +373,7 @@ export class SignalValidator {
     for (let i = 1; i < harmonics.length; i++) {
       if (harmonics[i] !== 0) {
         const ratio = Math.abs((harmonics[i - 1] ?? 0) / (harmonics[i] ?? 1));
-        
+
         for (const fibRatio of MathematicalPatterns.FIBONACCI_RATIOS) {
           if (this.isCloseToValue(ratio, fibRatio, 0.05)) {
             return true;
@@ -394,12 +396,12 @@ export class SignalValidator {
    */
   public getQualityMetrics(signal: ISILCSignal): SignalQualityMetrics {
     const noiseLevel = signal.harmonics ? this.calculateNoiseLevel(signal.harmonics) : 0;
-    
+
     return {
       snr: 1 - noiseLevel, // Signal-to-noise ratio
       harmonicDistortion: noiseLevel * 100, // As percentage
       frequencyAccuracy: signal.frequency === Math.floor(signal.frequency) ? 1.0 : 0.5,
-      phaseStability: this.calculatePhaseStability(signal.phase)
+      phaseStability: this.calculatePhaseStability(signal.phase),
     };
   }
 
@@ -407,13 +409,13 @@ export class SignalValidator {
    * Calculate phase stability metric
    */
   private calculatePhaseStability(phase: number): number {
-    const normalizedPhase = ((phase % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
+    const normalizedPhase = ((phase % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const distanceToCanonical = Math.min(
       Math.abs(normalizedPhase),
       Math.abs(normalizedPhase - Math.PI),
-      Math.abs(normalizedPhase - 2 * Math.PI)
+      Math.abs(normalizedPhase - 2 * Math.PI),
     );
-    
+
     return Math.max(0, 1 - distanceToCanonical / (Math.PI / 2));
   }
 
@@ -421,7 +423,7 @@ export class SignalValidator {
    * Validate multiple signals in batch
    */
   public validateBatch(signals: ISILCSignal[]): SignalValidationResult[] {
-    return signals.map(signal => this.validate(signal));
+    return signals.map((signal) => this.validate(signal));
   }
 
   /**
@@ -429,7 +431,7 @@ export class SignalValidator {
    */
   public createValidationError(
     message: string,
-    _category: SILCErrorCategory = SILCErrorCategory.INVALID_SIGNAL_PARAMETERS
+    _category: SILCErrorCategory = SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
   ): Error {
     return new Error(message);
   }

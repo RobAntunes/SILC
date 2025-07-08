@@ -15,6 +15,6 @@ export type {
   TransportHandshake,
   TransportConfig,
   StreamConfig,
-  ParallelSegment
+  ParallelSegment,
 } from '../types/transport.types';
 export { TransportState } from '../types/transport.types';

@@ -1,21 +1,21 @@
 /**
  * SILC Signal Encoder
- * 
+ *
  * Encodes SILC signals into Base64 representation using 6-bit encoding:
  * Bit Layout: [AA][FFF][P]
  * - AA (2 bits): Amplitude level (4 levels: 0.25, 0.5, 0.75, 1.0)
- * - FFF (3 bits): Frequency band (8 bands: 0-7)  
+ * - FFF (3 bits): Frequency band (8 bands: 0-7)
  * - P (1 bit): Phase (0 = in-phase, 1 = out-of-phase)
  */
 
-import type { 
-  ISILCSignal, 
-  EncodedSignal, 
-  SignalEncodingFormat, 
+import type {
   CompressionInfo,
-  HarmonicCoefficients 
+  EncodedSignal,
+  HarmonicCoefficients,
+  ISILCSignal,
+  SignalEncodingFormat,
 } from '../types/signal.types';
-import { SILCErrorCategory, ErrorSeverity } from '../types/common.types';
+import { ErrorSeverity, SILCErrorCategory } from '../types/common.types';
 import { SILCError } from '../core/errors';
 import { createHash } from 'crypto';
 
@@ -50,20 +50,20 @@ const SIGNAL_TO_CHAR_MAP = new Map<string, string>();
 function initializeSignalMaps(): void {
   for (let i = 0; i < 64; i++) {
     const char = BASE64_CHARS[i];
-    
+
     // Extract components from 6-bit value
     const amplitudeBits = (i >> 4) & 0x03; // Upper 2 bits
     const frequencyBits = (i >> 1) & 0x07; // Middle 3 bits
-    const phaseBit = i & 0x01;            // Lower 1 bit
-    
+    const phaseBit = i & 0x01; // Lower 1 bit
+
     // Map to actual values
     const amplitude = [0.25, 0.5, 0.75, 1.0][amplitudeBits];
     const frequency = frequencyBits;
     const phase = phaseBit === 0 ? 0 : Math.PI;
-    
+
     const mapping: SignalCharacterMapping = { amplitude, frequency, phase };
     SIGNAL_CHARACTER_MAP.set(char, mapping);
-    
+
     // Create reverse mapping key
     const key = `${amplitude}:${frequency}:${phase}`;
     SIGNAL_TO_CHAR_MAP.set(key, char);
@@ -78,25 +78,25 @@ initializeSignalMaps();
  */
 export const MathConstants = {
   PI: {
-    amplitude: 0.14159,          // π decimals as amplitude
-    frequency: 3,                // π ≈ 3
+    amplitude: 0.14159, // π decimals as amplitude
+    frequency: 3, // π ≈ 3
     phase: 0,
-    harmonics: [3.14159, 2.65358]
+    harmonics: [3.14159, 2.65358],
   },
-  
+
   GOLDEN_RATIO: {
-    amplitude: 0.618,            // 1/φ
-    frequency: 1,                // φ ≈ 1.618 → band 1
+    amplitude: 0.618, // 1/φ
+    frequency: 1, // φ ≈ 1.618 → band 1
     phase: 0,
-    harmonics: [1.618, 0.382]    // φ and φ-1
+    harmonics: [1.618, 0.382], // φ and φ-1
   },
-  
+
   EULER: {
-    amplitude: 0.718,            // e - 2
-    frequency: 2,                // floor(e)
+    amplitude: 0.718, // e - 2
+    frequency: 2, // floor(e)
     phase: 0,
-    harmonics: [2.718, 1.718]    // e and e-1
-  }
+    harmonics: [2.718, 1.718], // e and e-1
+  },
 } as const;
 
 /**
@@ -106,10 +106,12 @@ export class SignalEncoder {
   private compressionLevel: number;
   private enableHarmonics: boolean;
 
-  constructor(options: {
-    compressionLevel?: number;
-    enableHarmonics?: boolean;
-  } = {}) {
+  constructor(
+    options: {
+      compressionLevel?: number;
+      enableHarmonics?: boolean;
+    } = {},
+  ) {
     this.compressionLevel = options.compressionLevel ?? 6;
     this.enableHarmonics = options.enableHarmonics ?? true;
   }
@@ -134,7 +136,7 @@ export class SignalEncoder {
           `Unsupported encoding format: ${format}`,
           SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
           ErrorSeverity.MEDIUM,
-          500
+          500,
         );
     }
   }
@@ -145,23 +147,23 @@ export class SignalEncoder {
   private encodeBase64(signal: ISILCSignal): EncodedSignal {
     // Quantize amplitude to 4 levels
     const amplitudeLevel = this.quantizeAmplitude(signal.amplitude);
-    
+
     // Validate frequency band
     const frequency = Math.max(0, Math.min(7, Math.floor(signal.frequency)));
-    
+
     // Convert phase to binary
     const phase = this.quantizePhase(signal.phase);
-    
+
     // Create lookup key
     const key = `${amplitudeLevel}:${frequency}:${phase}`;
     const baseChar = SIGNAL_TO_CHAR_MAP.get(key);
-    
+
     if (!baseChar) {
       throw new SILCError(
         `Failed to encode signal parameters: ${key}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.HIGH,
-        201
+        201,
       );
     }
 
@@ -169,7 +171,7 @@ export class SignalEncoder {
     let compressionInfo: CompressionInfo = {
       algorithm: 'none',
       level: 0,
-      ratio: 1.0
+      ratio: 1.0,
     };
 
     // Handle harmonics if present
@@ -180,17 +182,14 @@ export class SignalEncoder {
     }
 
     // Calculate checksum
-    const checksum = createHash('sha256')
-      .update(encoded)
-      .digest('hex')
-      .substring(0, 8);
+    const checksum = createHash('sha256').update(encoded).digest('hex').substring(0, 8);
 
     // Return the quantized signal values for base64 encoding
     const quantizedSignal: ISILCSignal = {
       amplitude: amplitudeLevel,
       frequency: frequency,
       phase: phase,
-      harmonics: signal.harmonics
+      harmonics: signal.harmonics,
     };
 
     return {
@@ -199,9 +198,9 @@ export class SignalEncoder {
       encoding: {
         method: 'base64',
         compressionRatio: compressionInfo.ratio,
-        size: encoded.length
+        size: encoded.length,
       },
-      checksum
+      checksum,
     };
   }
 
@@ -212,11 +211,11 @@ export class SignalEncoder {
     // Convert harmonics to binary representation
     const buffer = new Float32Array(harmonics);
     const bytes = new Uint8Array(buffer.buffer);
-    
+
     // Apply compression if beneficial
     let compressed = bytes;
     let compressionRatio = 1.0;
-    
+
     if (bytes.length > 32 && this.compressionLevel > 0) {
       // Simple run-length encoding for demonstration
       compressed = this.compressBytes(bytes);
@@ -225,14 +224,14 @@ export class SignalEncoder {
 
     // Convert to Base64
     const encoded = Buffer.from(compressed).toString('base64');
-    
+
     return {
       encoded: `H${encoded}`, // Prefix with 'H' to indicate harmonics
       compression: {
         algorithm: compressionRatio > 1.1 ? 'custom' : 'none',
         level: this.compressionLevel,
-        ratio: compressionRatio
-      }
+        ratio: compressionRatio,
+      },
     };
   }
 
@@ -242,13 +241,13 @@ export class SignalEncoder {
   private encodeIEEE754(signal: ISILCSignal): EncodedSignal {
     const buffer = new ArrayBuffer(16 + (signal.harmonics?.length ?? 0) * 4);
     const view = new DataView(buffer);
-    
+
     // Store signal components as IEEE754 floats
     view.setFloat32(0, signal.amplitude);
     view.setFloat32(4, signal.frequency);
     view.setFloat32(8, signal.phase);
     view.setUint32(12, signal.harmonics?.length ?? 0);
-    
+
     // Store harmonics
     if (signal.harmonics) {
       signal.harmonics.forEach((harmonic, index) => {
@@ -264,9 +263,9 @@ export class SignalEncoder {
       encoded,
       encoding: {
         method: 'ieee754',
-        size: encoded.length
+        size: encoded.length,
       },
-      checksum
+      checksum,
     };
   }
 
@@ -278,11 +277,11 @@ export class SignalEncoder {
     const amplitude8 = Math.floor(signal.amplitude * 255);
     const frequency3 = signal.frequency & 0x07;
     const phase1 = signal.phase > Math.PI / 2 ? 1 : 0;
-    
+
     // Pack into single byte: AAAAAAAF FFF0000P
-    const byte1 = (amplitude8 << 0);
+    const byte1 = amplitude8 << 0;
     const byte2 = (frequency3 << 5) | (phase1 << 0);
-    
+
     const buffer = new Uint8Array([byte1, byte2]);
     const encoded = Buffer.from(buffer).toString('base64');
     const checksum = createHash('sha256').update(encoded).digest('hex').substring(0, 8);
@@ -292,9 +291,9 @@ export class SignalEncoder {
       encoded,
       encoding: {
         method: 'binary',
-        size: encoded.length
+        size: encoded.length,
       },
-      checksum
+      checksum,
     };
   }
 
@@ -310,9 +309,9 @@ export class SignalEncoder {
       encoded,
       encoding: {
         method: 'json',
-        size: encoded.length
+        size: encoded.length,
       },
-      checksum
+      checksum,
     };
   }
 
@@ -331,8 +330,8 @@ export class SignalEncoder {
    */
   private quantizePhase(phase: number): number {
     // Normalize phase to [0, 2π]
-    const normalizedPhase = ((phase % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
-    
+    const normalizedPhase = ((phase % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
     // Binary quantization: 0 for [0, π), π for [π, 2π)
     return normalizedPhase < Math.PI ? 0 : Math.PI;
   }
@@ -343,29 +342,29 @@ export class SignalEncoder {
   private compressBytes(bytes: Uint8Array): Uint8Array {
     const compressed: number[] = [];
     let i = 0;
-    
+
     while (i < bytes.length) {
       const currentByte = bytes[i];
       let count = 1;
-      
+
       // Count consecutive identical bytes
       while (i + count < bytes.length && bytes[i + count] === currentByte && count < 255) {
         count++;
       }
-      
+
       if (count > 3) {
         // Use run-length encoding for runs of 4 or more
-        compressed.push(0xFF, count, currentByte); // Escape sequence
+        compressed.push(0xff, count, currentByte); // Escape sequence
       } else {
         // Store bytes literally
         for (let j = 0; j < count; j++) {
           compressed.push(currentByte);
         }
       }
-      
+
       i += count;
     }
-    
+
     return new Uint8Array(compressed);
   }
 
@@ -378,7 +377,7 @@ export class SignalEncoder {
         `Invalid amplitude: ${signal.amplitude}. Must be between 0 and 1.`,
         SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
         ErrorSeverity.HIGH,
-        200
+        200,
       );
     }
 
@@ -387,7 +386,7 @@ export class SignalEncoder {
         `Invalid frequency: ${signal.frequency}. Must be integer between 0 and 7.`,
         SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
         ErrorSeverity.HIGH,
-        200
+        200,
       );
     }
 
@@ -397,7 +396,7 @@ export class SignalEncoder {
           `Too many harmonics: ${signal.harmonics.length}. Maximum 100 allowed.`,
           SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
           ErrorSeverity.MEDIUM,
-          200
+          200,
         );
       }
 
@@ -407,7 +406,7 @@ export class SignalEncoder {
             `Invalid harmonic value: ${harmonic}. Must be finite number.`,
             SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
             ErrorSeverity.HIGH,
-            200
+            200,
           );
         }
       }

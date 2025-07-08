@@ -12,21 +12,21 @@ export interface SecurityConfig {
     algorithm: 'aes-256-gcm' | 'chacha20-poly1305';
     keyRotationInterval: number;
   };
-  
+
   /** Authentication settings */
   authentication: {
     enabled: boolean;
     method: 'hmac' | 'ecdsa' | 'rsa';
     keySize: number;
   };
-  
+
   /** Access control */
   accessControl: {
     enabled: boolean;
     permissions: PermissionModel;
     auditLogging: boolean;
   };
-  
+
   /** Memory protection */
   memoryProtection: {
     encryptSensitiveRegions: boolean;
@@ -41,20 +41,20 @@ export interface SecurityConfig {
 export interface EncryptionConfig {
   /** Encryption algorithm */
   algorithm: string;
-  
+
   /** Key derivation settings */
   keyDerivation: {
     method: 'pbkdf2' | 'scrypt' | 'argon2';
     iterations: number;
     saltSize: number;
   };
-  
+
   /** Initialization vector settings */
   iv: {
     size: number;
     randomSource: 'crypto' | 'system';
   };
-  
+
   /** Additional authenticated data */
   aad?: Uint8Array;
 }
@@ -65,23 +65,23 @@ export interface EncryptionConfig {
 export interface AuthenticationResult {
   /** Whether authentication succeeded */
   authenticated: boolean;
-  
+
   /** Agent identity if authenticated */
   agentId?: string;
-  
+
   /** Authentication method used */
   method: string;
-  
+
   /** Timestamp of authentication */
   timestamp: number;
-  
+
   /** Session information */
   session?: {
     sessionId: string;
     expiresAt: number;
     permissions: string[];
   };
-  
+
   /** Error information if failed */
   error?: {
     code: string;
@@ -100,14 +100,14 @@ export interface PermissionModel {
     canWrite: boolean;
     canExecute: boolean;
   };
-  
+
   /** Resource permissions */
   resources: {
     memory: Permission;
     signals: Permission;
     dialects: Permission;
   };
-  
+
   /** Operation permissions */
   operations: {
     createSignal: boolean;

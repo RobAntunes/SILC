@@ -1,6 +1,6 @@
 /**
  * SILC Protocol Type Definitions
- * 
+ *
  * This module exports all type definitions used throughout the SILC protocol implementation.
  */
 
@@ -48,10 +48,7 @@ export type { SILCMessageType as SILCMessageTypeType } from './message.types';
 export { SILCErrorCategory, ErrorSeverity } from './common.types';
 
 // Memory types (to be implemented)
-export type {
-  MemoryWindowConfig,
-  SharedMemoryLayout,
-} from './memory.types';
+export type { MemoryWindowConfig, SharedMemoryLayout } from './memory.types';
 
 // Dialect types (to be implemented)
 export type {
@@ -61,15 +58,7 @@ export type {
 } from './dialect.types';
 
 // Transport types (to be implemented)
-export type {
-  TransportConfig,
-  StreamConfig,
-  ParallelSegment,
-} from './transport.types';
+export type { TransportConfig, StreamConfig, ParallelSegment } from './transport.types';
 
 // Security types (to be implemented)
-export type {
-  SecurityConfig,
-  EncryptionConfig,
-  AuthenticationResult,
-} from './security.types';
+export type { SecurityConfig, EncryptionConfig, AuthenticationResult } from './security.types';

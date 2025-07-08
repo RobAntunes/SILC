@@ -1,22 +1,22 @@
 /**
  * SILC Message Builder
- * 
+ *
  * Constructs SILC protocol messages with proper headers, routing,
  * and metadata for AI-to-AI communication.
  */
 
 import type {
-  ISILCMessage,
-  ISILCHeader,
-  ISILCSignal,
-  SILCAgentID,
   DialectExtension,
+  ISILCHeader,
+  ISILCMessage,
+  ISILCSignal,
+  MessageBuilderConfig,
   MessageMetadata,
-  MessageBuilderConfig
+  SILCAgentID,
 } from '../types/message.types';
 import { SILCMessageType } from '../types/message.types';
 import type { CompressionInfo } from '../types/signal.types';
-import type { SILCError, SILCErrorCategory, ErrorSeverity } from '../types/common.types';
+import type { ErrorSeverity, SILCError, SILCErrorCategory } from '../types/common.types';
 import { createHash, randomUUID } from 'crypto';
 
 /**
@@ -28,11 +28,11 @@ const DEFAULT_CONFIG: MessageBuilderConfig = {
     modelType: 'unknown',
     instanceId: 'default',
     dialectVersion: '1.0.0',
-    capabilities: ['base-spec']
+    capabilities: ['base-spec'],
   },
   defaultPriority: 0.618, // Golden ratio priority
   enableCompression: true,
-  defaultSampleRate: 44100
+  defaultSampleRate: 44100,
 };
 
 /**
@@ -61,11 +61,11 @@ export class MessageBuilder {
     // Generate message ID and timestamp
     const messageId = randomUUID();
     const timestamp = this.getHighPrecisionTimestamp();
-    
+
     // Calculate signal properties
     const signalLength = this.calculateSignalLength(options.signal);
     const compression = options.compression ?? this.getDefaultCompression();
-    
+
     // Build header
     const header = this.buildHeader({
       messageId,
@@ -75,7 +75,7 @@ export class MessageBuilder {
       messageType: options.messageType ?? SILCMessageType.SIGNAL_TRANSFER,
       signalLength,
       compression,
-      priority: options.priority ?? this.config.defaultPriority
+      priority: options.priority ?? this.config.defaultPriority,
     });
 
     // Build complete message
@@ -83,7 +83,7 @@ export class MessageBuilder {
       header,
       signal: options.signal,
       dialect: options.dialect,
-      metadata: this.buildMetadata(options.metadata)
+      metadata: this.buildMetadata(options.metadata),
     };
 
     // Validate message
@@ -112,25 +112,25 @@ export class MessageBuilder {
       // Protocol identification
       protocol: 'SILC',
       version: '1.0.0',
-      
+
       // Message identity
       messageId: options.messageId,
       timestamp: options.timestamp,
       sequenceNumber: this.getNextSequenceNumber(),
-      
+
       // Routing information
       senderId: options.senderId,
       receiverId: options.receiverId,
       messageType: options.messageType,
-      
+
       // Signal properties
       signalLength: options.signalLength,
       sampleRate: this.config.defaultSampleRate,
       compression: options.compression,
-      
+
       // Quality assurance
       checksum,
-      priority: options.priority
+      priority: options.priority,
     };
 
     return header;
@@ -139,62 +139,56 @@ export class MessageBuilder {
   /**
    * Build handshake message for protocol negotiation
    */
-  public buildHandshake(
-    receiverId: SILCAgentID,
-    capabilities: string[] = []
-  ): ISILCMessage {
+  public buildHandshake(receiverId: SILCAgentID, capabilities: string[] = []): ISILCMessage {
     // Create a simple handshake signal
     const handshakeSignal: ISILCSignal = {
-      amplitude: 1.0,    // Full confidence
-      frequency: 0,      // Idle frequency for handshake
-      phase: 0,          // In-phase (agreement)
+      amplitude: 1.0, // Full confidence
+      frequency: 0, // Idle frequency for handshake
+      phase: 0, // In-phase (agreement)
     };
 
     const metadata: Partial<MessageMetadata> = {
       priority: 'high',
       context: {
-        conversationId: randomUUID()
+        conversationId: randomUUID(),
       },
       performance: {
         cacheable: false,
-        ttl: 30000 // 30 second TTL for handshake
-      }
+        ttl: 30000, // 30 second TTL for handshake
+      },
     };
 
     return this.build({
       signal: handshakeSignal,
       receiverId,
       messageType: SILCMessageType.HANDSHAKE,
-      metadata
+      metadata,
     });
   }
 
   /**
    * Build error message
    */
-  public buildError(
-    receiverId: SILCAgentID,
-    originalMessageId?: string
-  ): ISILCMessage {
+  public buildError(receiverId: SILCAgentID, originalMessageId?: string): ISILCMessage {
     // Create error signal with low confidence and high urgency
     const errorSignal: ISILCSignal = {
-      amplitude: 0.25,   // Low confidence (error state)
-      frequency: 7,      // High urgency
-      phase: Math.PI,    // Out-of-phase (disagreement/error)
+      amplitude: 0.25, // Low confidence (error state)
+      frequency: 7, // High urgency
+      phase: Math.PI, // Out-of-phase (disagreement/error)
     };
 
     const metadata: Partial<MessageMetadata> = {
       priority: 'critical',
       context: {
-        parentMessageId: originalMessageId
-      }
+        parentMessageId: originalMessageId,
+      },
     };
 
     return this.build({
       signal: errorSignal,
       receiverId,
       messageType: SILCMessageType.ERROR,
-      metadata
+      metadata,
     });
   }
 
@@ -204,24 +198,24 @@ export class MessageBuilder {
   public buildHeartbeat(receiverId: SILCAgentID): ISILCMessage {
     // Simple heartbeat signal
     const heartbeatSignal: ISILCSignal = {
-      amplitude: 0.5,    // Medium confidence
-      frequency: 1,      // Low urgency
-      phase: 0,          // In-phase
+      amplitude: 0.5, // Medium confidence
+      frequency: 1, // Low urgency
+      phase: 0, // In-phase
     };
 
     const metadata: Partial<MessageMetadata> = {
       priority: 'low',
       performance: {
         cacheable: false,
-        ttl: 5000 // 5 second TTL
-      }
+        ttl: 5000, // 5 second TTL
+      },
     };
 
     return this.build({
       signal: heartbeatSignal,
       receiverId,
       messageType: SILCMessageType.HEARTBEAT,
-      metadata
+      metadata,
     });
   }
 
@@ -231,12 +225,12 @@ export class MessageBuilder {
   private calculateSignalLength(signal: ISILCSignal): number {
     // Base signal is always 1 sample
     let length = 1;
-    
+
     // Add harmonic samples if present
     if (signal.harmonics) {
       length += signal.harmonics.length;
     }
-    
+
     return length;
   }
 
@@ -247,7 +241,7 @@ export class MessageBuilder {
     return {
       algorithm: this.config.enableCompression ? 'zlib' : 'none',
       level: this.config.enableCompression ? 6 : 0,
-      ratio: 1.0 // Will be updated after compression
+      ratio: 1.0, // Will be updated after compression
     };
   }
 
@@ -264,8 +258,8 @@ export class MessageBuilder {
         cacheable: metadata.performance?.cacheable ?? true,
         ttl: metadata.performance?.ttl ?? 300000, // 5 minute default TTL
         compression: metadata.performance?.compression ?? this.config.enableCompression,
-        ...metadata.performance
-      }
+        ...metadata.performance,
+      },
     };
   }
 
@@ -284,13 +278,10 @@ export class MessageBuilder {
       timestamp: options.timestamp,
       senderId: options.senderId,
       receiverId: options.receiverId,
-      messageType: options.messageType
+      messageType: options.messageType,
     });
 
-    return createHash('sha256')
-      .update(headerData)
-      .digest('hex')
-      .substring(0, 16); // 16 character checksum
+    return createHash('sha256').update(headerData).digest('hex').substring(0, 16); // 16 character checksum
   }
 
   /**
@@ -366,7 +357,7 @@ export class MessageBuilder {
       header: message.header,
       encodedSignal,
       dialect: message.dialect,
-      metadata: message.metadata
+      metadata: message.metadata,
     });
 
     message.header.checksum = createHash('sha256')
@@ -381,7 +372,7 @@ export class MessageBuilder {
   public fromTemplate(
     template: 'handshake' | 'heartbeat' | 'error',
     receiverId: SILCAgentID,
-    additionalData?: unknown
+    additionalData?: unknown,
   ): ISILCMessage {
     switch (template) {
       case 'handshake':
@@ -404,7 +395,7 @@ export class MessageBuilder {
     cloned.header.messageId = randomUUID();
     cloned.header.timestamp = this.getHighPrecisionTimestamp();
     cloned.header.sequenceNumber = this.getNextSequenceNumber();
-    
+
     return cloned;
   }
 }

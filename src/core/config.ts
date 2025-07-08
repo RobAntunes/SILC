@@ -1,6 +1,6 @@
 /**
  * SILC Protocol Configuration
- * 
+ *
  * Centralized configuration management for the SILC protocol with
  * development, production, and custom configurations.
  */
@@ -79,7 +79,7 @@ export const PRODUCTION_CONFIG: SILCConfig = {
     dialectName: 'production-optimized-v1',
     baseSpecFallback: true,
     enablePatternDiscovery: true,
-    enableDiagnostics: false
+    enableDiagnostics: false,
   },
 
   agent: {
@@ -87,7 +87,7 @@ export const PRODUCTION_CONFIG: SILCConfig = {
     modelType: 'unknown',
     instanceId: 'prod-instance',
     dialectVersion: '1.0.0',
-    capabilities: ['base-spec', 'parallel-streaming', 'compression']
+    capabilities: ['base-spec', 'parallel-streaming', 'compression'],
   },
 
   memory: {
@@ -95,7 +95,7 @@ export const PRODUCTION_CONFIG: SILCConfig = {
     maxWindows: 10000,
     adaptiveResize: true,
     alignment: 64,
-    zeroInitialization: true
+    zeroInitialization: true,
   },
 
   performance: {
@@ -103,28 +103,28 @@ export const PRODUCTION_CONFIG: SILCConfig = {
     compressionLevel: 6,
     parallelStreamSegments: 16,
     maxConcurrentOperations: 1000,
-    enableMetrics: true
+    enableMetrics: true,
   },
 
   security: {
     enableEncryption: true,
     enableIntegrityChecks: true,
     enableAuditLogging: true,
-    maxSignalSize: 10485760 // 10MB
+    maxSignalSize: 10485760, // 10MB
   },
 
   errorHandling: {
     maxRetries: 3,
     retryBackoffMultiplier: 2.0,
     enableAutoRecovery: true,
-    logLevel: 'WARNING'
+    logLevel: 'WARNING',
   },
 
   transport: {
     type: 'hybrid',
     localTimeout: 1000,
     remoteTimeout: 5000,
-    enableCompression: true
+    enableCompression: true,
   },
 
   options: {
@@ -136,9 +136,9 @@ export const PRODUCTION_CONFIG: SILCConfig = {
     limits: {
       maxMemory: 1073741824, // 1GB
       maxSignalSize: 10485760, // 10MB
-      maxConcurrentOperations: 1000
-    }
-  }
+      maxConcurrentOperations: 1000,
+    },
+  },
 };
 
 /**
@@ -146,24 +146,24 @@ export const PRODUCTION_CONFIG: SILCConfig = {
  */
 export const DEVELOPMENT_CONFIG: SILCConfig = {
   ...PRODUCTION_CONFIG,
-  
+
   protocol: {
     ...PRODUCTION_CONFIG.protocol,
     dialectName: 'development-debug-v1',
-    enableDiagnostics: true
+    enableDiagnostics: true,
   },
 
   agent: {
     ...PRODUCTION_CONFIG.agent,
     instanceId: 'dev-instance',
-    capabilities: ['base-spec', 'debug', 'experimental']
+    capabilities: ['base-spec', 'debug', 'experimental'],
   },
 
   memory: {
     ...PRODUCTION_CONFIG.memory,
     windowSize: 1024,
     maxWindows: 100,
-    adaptiveResize: false
+    adaptiveResize: false,
   },
 
   performance: {
@@ -172,13 +172,13 @@ export const DEVELOPMENT_CONFIG: SILCConfig = {
     compressionLevel: 1,
     parallelStreamSegments: 4,
     maxConcurrentOperations: 10,
-    enableMetrics: true
+    enableMetrics: true,
   },
 
   security: {
     ...PRODUCTION_CONFIG.security,
     enableEncryption: false,
-    maxSignalSize: 1048576 // 1MB
+    maxSignalSize: 1048576, // 1MB
   },
 
   errorHandling: {
@@ -186,14 +186,14 @@ export const DEVELOPMENT_CONFIG: SILCConfig = {
     maxRetries: 1,
     retryBackoffMultiplier: 1.0,
     enableAutoRecovery: false,
-    logLevel: 'DEBUG'
+    logLevel: 'DEBUG',
   },
 
   transport: {
     ...PRODUCTION_CONFIG.transport,
     type: 'local',
     localTimeout: 100,
-    remoteTimeout: 1000
+    remoteTimeout: 1000,
   },
 
   options: {
@@ -203,9 +203,9 @@ export const DEVELOPMENT_CONFIG: SILCConfig = {
     limits: {
       maxMemory: 134217728, // 128MB
       maxSignalSize: 1048576, // 1MB
-      maxConcurrentOperations: 10
-    }
-  }
+      maxConcurrentOperations: 10,
+    },
+  },
 };
 
 /**
@@ -213,38 +213,38 @@ export const DEVELOPMENT_CONFIG: SILCConfig = {
  */
 export const TEST_CONFIG: SILCConfig = {
   ...DEVELOPMENT_CONFIG,
-  
+
   protocol: {
     ...DEVELOPMENT_CONFIG.protocol,
-    dialectName: 'test-minimal-v1'
+    dialectName: 'test-minimal-v1',
   },
 
   agent: {
     ...DEVELOPMENT_CONFIG.agent,
-    instanceId: 'test-instance'
+    instanceId: 'test-instance',
   },
 
   memory: {
     ...DEVELOPMENT_CONFIG.memory,
     windowSize: 256,
-    maxWindows: 10
+    maxWindows: 10,
   },
 
   performance: {
     ...DEVELOPMENT_CONFIG.performance,
     signalCacheSize: 100,
-    maxConcurrentOperations: 1
+    maxConcurrentOperations: 1,
   },
 
   errorHandling: {
     ...DEVELOPMENT_CONFIG.errorHandling,
-    logLevel: 'ERROR' // Quiet during tests
+    logLevel: 'ERROR', // Quiet during tests
   },
 
   options: {
     ...DEVELOPMENT_CONFIG.options,
-    logLevel: 'error'
-  }
+    logLevel: 'error',
+  },
 };
 
 /**
@@ -295,7 +295,10 @@ export class ConfigBuilder {
    * Set performance configuration
    */
   public withPerformance(performance: Partial<SILCConfig['performance']>): ConfigBuilder {
-    this.config.performance = { ...this.config.performance, ...performance } as SILCConfig['performance'];
+    this.config.performance = {
+      ...this.config.performance,
+      ...performance,
+    } as SILCConfig['performance'];
     return this;
   }
 
@@ -314,10 +317,11 @@ export class ConfigBuilder {
     if (!this.config.options) this.config.options = {} as ConfigurationOptions;
     this.config.options.debug = enabled;
     this.config.options.logLevel = enabled ? 'debug' : 'warn';
-    
-    if (!this.config.errorHandling) this.config.errorHandling = { ...DEVELOPMENT_CONFIG.errorHandling };
+
+    if (!this.config.errorHandling)
+      this.config.errorHandling = { ...DEVELOPMENT_CONFIG.errorHandling };
     this.config.errorHandling.logLevel = enabled ? 'DEBUG' : 'WARNING';
-    
+
     return this;
   }
 
@@ -336,7 +340,7 @@ export class ConfigBuilder {
   public build(): SILCConfig {
     // Validate and fill in missing required fields
     const config = this.config as SILCConfig;
-    
+
     if (!config.protocol) config.protocol = DEFAULT_CONFIG.protocol;
     if (!config.agent) config.agent = DEFAULT_CONFIG.agent;
     if (!config.memory) config.memory = DEFAULT_CONFIG.memory;
@@ -359,7 +363,7 @@ export class ConfigLoader {
    */
   public static loadFromEnvironment(): SILCConfig {
     const env = process.env.NODE_ENV || 'development';
-    
+
     switch (env) {
       case 'production':
         return PRODUCTION_CONFIG;
@@ -376,13 +380,12 @@ export class ConfigLoader {
    */
   public static loadFromEnv(): SILCConfig {
     const base = this.loadFromEnvironment();
-    
-    return ConfigBuilder
-      .from(base)
+
+    return ConfigBuilder.from(base)
       .withAgent({
         namespace: process.env.SILC_NAMESPACE || base.agent.namespace,
         modelType: process.env.SILC_MODEL_TYPE || base.agent.modelType,
-        instanceId: process.env.SILC_INSTANCE_ID || base.agent.instanceId
+        instanceId: process.env.SILC_INSTANCE_ID || base.agent.instanceId,
       })
       .withDebug(process.env.SILC_DEBUG === 'true')
       .withCompression(parseInt(process.env.SILC_COMPRESSION_LEVEL || '6'))

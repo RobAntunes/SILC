@@ -1,10 +1,10 @@
 /**
  * Unified SILC Signal processor
- * 
+ *
  * Provides a high-level interface for signal operations
  */
 
-import type { ISILCSignal, EncodedSignal, SignalEncodingFormat } from '../types/signal.types';
+import type { EncodedSignal, ISILCSignal, SignalEncodingFormat } from '../types/signal.types';
 import { SignalEncoder } from './encoder';
 import { SignalDecoder } from './decoder';
 import { SignalValidator } from './validator';
@@ -47,12 +47,17 @@ export class SILCSignal {
   /**
    * Create a new signal
    */
-  create(amplitude: number, frequency: number, phase: number = 0, harmonics?: number[]): ISILCSignal {
+  create(
+    amplitude: number,
+    frequency: number,
+    phase: number = 0,
+    harmonics?: number[],
+  ): ISILCSignal {
     return {
       amplitude,
       frequency,
       phase,
-      harmonics
+      harmonics,
     };
   }
 }

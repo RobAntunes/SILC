@@ -1,12 +1,12 @@
 /**
  * SILC Protocol - Self-Interpreting Local Communication
- * 
+ *
  * The world's first AI-native communication protocol using mathematical signal patterns.
- * 
+ *
  * @example
  * ```typescript
  * import { SILCProtocol } from 'silc-protocol';
- * 
+ *
  * const silc = new SILCProtocol({
  *   agentId: {
  *     namespace: 'myapp',
@@ -14,7 +14,7 @@
  *     instanceId: 'agent-001'
  *   }
  * });
- * 
+ *
  * // Create a signal
  * const signal = silc.createSignal({
  *   amplitude: 0.85,    // High confidence
@@ -22,7 +22,7 @@
  *   phase: 0,          // In-phase (agreement)
  *   harmonics: [0.618, 0.382] // Golden ratio harmonics
  * });
- * 
+ *
  * // Transmit to another AI
  * await silc.transmit(signal, targetAgentId);
  * ```
@@ -33,11 +33,7 @@ export { SILCProtocol } from './core/protocol';
 export { SILCConfig } from './core/config';
 
 // Signal processing exports
-export {
-  SILCSignal,
-  SignalEncoder,
-  SignalDecoder,
-} from './signal';
+export { SILCSignal, SignalEncoder, SignalDecoder } from './signal';
 
 // Memory management exports (Phase 2 - TODO)
 // export {
@@ -80,31 +76,31 @@ export type {
   ISILCHeader,
   SILCAgentID,
   SILCMessageType,
-  
+
   // Signal types
   SignalParameters,
   HarmonicCoefficients,
   SignalValidationResult,
-  
+
   // Memory types
   MemoryWindowConfig,
   SharedMemoryLayout,
-  
+
   // Dialect types
   IDialectPattern,
   PatternDiscoveryConfig,
   CrossDialectTranslation,
-  
+
   // Transport types
   TransportConfig,
   StreamConfig,
   ParallelSegment,
-  
+
   // Security types
   SecurityConfig,
   EncryptionConfig,
   AuthenticationResult,
-  
+
   // Common types
   SILCError,
   PerformanceMetrics,
@@ -112,19 +108,11 @@ export type {
 } from './types';
 
 // Utility exports
-export {
-  MathConstants,
-  SignalUtils,
-  PerformanceUtils,
-} from './utils';
+export { MathConstants, SignalUtils, PerformanceUtils } from './utils';
 
 // Version info
 export const VERSION = '0.1.0';
 export const PROTOCOL_VERSION = '1.0.0';
 
 // Default configurations
-export {
-  DEFAULT_CONFIG,
-  DEVELOPMENT_CONFIG,
-  PRODUCTION_CONFIG,
-} from './core';
+export { DEFAULT_CONFIG, DEVELOPMENT_CONFIG, PRODUCTION_CONFIG } from './core';

@@ -1,17 +1,17 @@
 /**
  * SILC Signal Decoder
- * 
+ *
  * Decodes SILC signals from various encoded formats back to ISILCSignal objects.
  * Handles Base64, IEEE754, binary, and JSON representations with validation.
  */
 
-import type { 
-  ISILCSignal, 
-  EncodedSignal, 
+import type {
+  EncodedSignal,
+  ISILCSignal,
   SignalEncodingFormat,
-  SignalValidationResult 
+  SignalValidationResult,
 } from '../types/signal.types';
-import { SILCErrorCategory, ErrorSeverity } from '../types/common.types';
+import { ErrorSeverity, SILCErrorCategory } from '../types/common.types';
 import { SILCError } from '../core/errors';
 import { SignalEncoder } from './encoder';
 import { createHash } from 'crypto';
@@ -37,10 +37,12 @@ export class SignalDecoder {
   private validateChecksums: boolean;
   private strictMode: boolean;
 
-  constructor(options: {
-    validateChecksums?: boolean;
-    strictMode?: boolean;
-  } = {}) {
+  constructor(
+    options: {
+      validateChecksums?: boolean;
+      strictMode?: boolean;
+    } = {},
+  ) {
     this.validateChecksums = options.validateChecksums ?? true;
     this.strictMode = options.strictMode ?? false;
   }
@@ -77,7 +79,7 @@ export class SignalDecoder {
           `Unsupported decoding format: ${format}`,
           SILCErrorCategory.INVALID_MESSAGE_FORMAT,
           ErrorSeverity.HIGH,
-          101
+          101,
         );
     }
 
@@ -88,7 +90,7 @@ export class SignalDecoder {
         `Signal validation failed: ${validationResult.errors.join(', ')}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.HIGH,
-        201
+        201,
       );
     }
 
@@ -101,8 +103,8 @@ export class SignalDecoder {
         originalSize: encodedSignal.encoded.length,
         decodedSize: this.calculateSignalSize(signal),
         compressionRatio: encodedSignal.encoding.compressionRatio ?? 1.0,
-        processingTime: endTime - startTime
-      }
+        processingTime: endTime - startTime,
+      },
     };
   }
 
@@ -115,27 +117,27 @@ export class SignalDecoder {
         'Empty encoded signal',
         SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
         ErrorSeverity.HIGH,
-        200
+        200,
       );
     }
 
     // Extract base signal character
     const baseChar = encoded[0];
     const mapping = SignalEncoder.getCharacterMapping(baseChar);
-    
+
     if (!mapping) {
       throw new SILCError(
         `Invalid signal character: ${baseChar}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.HIGH,
-        201
+        201,
       );
     }
 
     const signal: ISILCSignal = {
       amplitude: mapping.amplitude,
       frequency: mapping.frequency,
-      phase: mapping.phase
+      phase: mapping.phase,
     };
 
     // Check for harmonics data
@@ -157,24 +159,24 @@ export class SignalDecoder {
     try {
       // Decode from Base64
       const compressed = Buffer.from(harmonicsEncoded, 'base64');
-      
+
       // Decompress if needed
       const decompressed = this.decompressBytes(compressed);
-      
+
       // Convert back to Float32Array
       const buffer = decompressed.buffer.slice(
-        decompressed.byteOffset, 
-        decompressed.byteOffset + decompressed.byteLength
+        decompressed.byteOffset,
+        decompressed.byteOffset + decompressed.byteLength,
       );
       const harmonicsArray = new Float32Array(buffer);
-      
+
       return Array.from(harmonicsArray);
     } catch (error) {
       throw new SILCError(
         `Failed to decode harmonics: ${error instanceof Error ? error.message : String(error)}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.MEDIUM,
-        201
+        201,
       );
     }
   }
@@ -186,14 +188,14 @@ export class SignalDecoder {
     try {
       const buffer = Buffer.from(encoded, 'base64');
       const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-      
+
       const amplitude = view.getFloat32(0);
       const frequency = view.getFloat32(4);
       const phase = view.getFloat32(8);
       const harmonicsCount = view.getUint32(12);
-      
+
       const signal: ISILCSignal = { amplitude, frequency, phase };
-      
+
       if (harmonicsCount > 0) {
         const harmonics: number[] = [];
         for (let i = 0; i < harmonicsCount; i++) {
@@ -201,14 +203,14 @@ export class SignalDecoder {
         }
         signal.harmonics = harmonics;
       }
-      
+
       return signal;
     } catch (error) {
       throw new SILCError(
         `Failed to decode IEEE754 signal: ${error instanceof Error ? error.message : String(error)}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.HIGH,
-        201
+        201,
       );
     }
   }
@@ -219,26 +221,26 @@ export class SignalDecoder {
   private decodeBinary(encoded: string): ISILCSignal {
     try {
       const buffer = Buffer.from(encoded, 'base64');
-      
+
       if (buffer.length < 2) {
         throw new Error('Insufficient binary data');
       }
-      
+
       const byte1 = buffer[0];
       const byte2 = buffer[1];
-      
+
       // Extract components
       const amplitude = byte1 / 255;
       const frequency = (byte2 >> 5) & 0x07;
       const phase = (byte2 & 0x01) === 1 ? Math.PI : 0;
-      
+
       return { amplitude, frequency, phase };
     } catch (error) {
       throw new SILCError(
         `Failed to decode binary signal: ${error instanceof Error ? error.message : String(error)}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.HIGH,
-        201
+        201,
       );
     }
   }
@@ -249,21 +251,23 @@ export class SignalDecoder {
   private decodeJSON(encoded: string): ISILCSignal {
     try {
       const signal = JSON.parse(encoded) as ISILCSignal;
-      
+
       // Validate structure
-      if (typeof signal.amplitude !== 'number' ||
-          typeof signal.frequency !== 'number' ||
-          typeof signal.phase !== 'number') {
+      if (
+        typeof signal.amplitude !== 'number' ||
+        typeof signal.frequency !== 'number' ||
+        typeof signal.phase !== 'number'
+      ) {
         throw new Error('Invalid signal structure in JSON');
       }
-      
+
       return signal;
     } catch (error) {
       throw new SILCError(
         `Failed to decode JSON signal: ${error instanceof Error ? error.message : String(error)}`,
         SILCErrorCategory.INVALID_MESSAGE_FORMAT,
         ErrorSeverity.HIGH,
-        101
+        101,
       );
     }
   }
@@ -274,17 +278,17 @@ export class SignalDecoder {
   private decompressBytes(compressed: Uint8Array): Uint8Array {
     const decompressed: number[] = [];
     let i = 0;
-    
+
     while (i < compressed.length) {
-      if (compressed[i] === 0xFF && i + 2 < compressed.length) {
+      if (compressed[i] === 0xff && i + 2 < compressed.length) {
         // Run-length encoded sequence
         const count = compressed[i + 1];
         const value = compressed[i + 2];
-        
+
         for (let j = 0; j < count; j++) {
           decompressed.push(value);
         }
-        
+
         i += 3;
       } else {
         // Literal byte
@@ -292,7 +296,7 @@ export class SignalDecoder {
         i++;
       }
     }
-    
+
     return new Uint8Array(decompressed);
   }
 
@@ -304,13 +308,13 @@ export class SignalDecoder {
       .update(encodedSignal.encoded)
       .digest('hex')
       .substring(0, 8);
-    
+
     if (calculatedChecksum !== encodedSignal.checksum) {
       throw new SILCError(
         `Checksum mismatch. Expected: ${encodedSignal.checksum}, Got: ${calculatedChecksum}`,
         SILCErrorCategory.SIGNAL_CORRUPTION,
         ErrorSeverity.CRITICAL,
-        201
+        201,
       );
     }
   }
@@ -344,11 +348,12 @@ export class SignalDecoder {
       quality *= 0.5;
     } else {
       // Normalize phase and check if it's close to 0 or π
-      const normalizedPhase = ((signal.phase % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
-      const isValidPhase = Math.abs(normalizedPhase) < 0.1 || 
-                          Math.abs(normalizedPhase - Math.PI) < 0.1 ||
-                          Math.abs(normalizedPhase - 2 * Math.PI) < 0.1;
-      
+      const normalizedPhase = ((signal.phase % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      const isValidPhase =
+        Math.abs(normalizedPhase) < 0.1 ||
+        Math.abs(normalizedPhase - Math.PI) < 0.1 ||
+        Math.abs(normalizedPhase - 2 * Math.PI) < 0.1;
+
       if (!isValidPhase) {
         warnings.push(`Unusual phase value: ${signal.phase} (not close to 0 or π)`);
         quality *= 0.95;
@@ -383,7 +388,7 @@ export class SignalDecoder {
       valid: errors.length === 0,
       errors,
       warnings,
-      quality: Math.max(0, Math.min(1, quality))
+      quality: Math.max(0, Math.min(1, quality)),
     };
   }
 
@@ -393,14 +398,13 @@ export class SignalDecoder {
   private hasGoldenRatioPattern(harmonics: number[]): boolean {
     const phi = 1.618033988749;
     const tolerance = 0.01;
-    
+
     for (const harmonic of harmonics) {
-      if (Math.abs(harmonic - phi) < tolerance || 
-          Math.abs(harmonic - (1/phi)) < tolerance) {
+      if (Math.abs(harmonic - phi) < tolerance || Math.abs(harmonic - 1 / phi) < tolerance) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -409,11 +413,11 @@ export class SignalDecoder {
    */
   private calculateSignalSize(signal: ISILCSignal): number {
     let size = 12; // 3 floats (amplitude, frequency, phase)
-    
+
     if (signal.harmonics) {
       size += signal.harmonics.length * 4; // Each harmonic is a float
     }
-    
+
     return size;
   }
 
@@ -421,7 +425,7 @@ export class SignalDecoder {
    * Decode multiple signals from a batch
    */
   public decodeBatch(encodedSignals: EncodedSignal[]): DecodingResult[] {
-    return encodedSignals.map(encoded => this.decode(encoded));
+    return encodedSignals.map((encoded) => this.decode(encoded));
   }
 
   /**
@@ -432,15 +436,15 @@ export class SignalDecoder {
     if (encoded.startsWith('{') && encoded.endsWith('}')) {
       return 'json';
     }
-    
+
     if (encoded.length === 1 && /^[A-Za-z0-9+/]$/.test(encoded)) {
       return 'base64';
     }
-    
+
     if (encoded.includes('H')) {
       return 'base64'; // Base64 with harmonics
     }
-    
+
     // Try to decode as base64 and check if it's binary
     try {
       const buffer = Buffer.from(encoded, 'base64');
@@ -453,7 +457,7 @@ export class SignalDecoder {
     } catch {
       // Not valid base64
     }
-    
+
     return 'base64'; // Default fallback
   }
 }

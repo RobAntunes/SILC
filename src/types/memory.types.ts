@@ -8,16 +8,16 @@
 export interface MemoryWindowConfig {
   /** Base window size in bytes (default: 4096) */
   windowSize: number;
-  
+
   /** Number of concurrent windows */
   windowCount: number;
-  
+
   /** Allow dynamic window resizing */
   adaptiveResize: boolean;
-  
+
   /** Resize increment in bytes (default: 4096) */
   resizeIncrement: number;
-  
+
   /** Maximum window size in bytes (default: 1MB) */
   maxWindowSize: number;
 }
@@ -28,10 +28,10 @@ export interface MemoryWindowConfig {
 export interface SharedMemoryLayout {
   /** Header section (64 bytes) */
   header: MemoryHeader;
-  
+
   /** Signal data buffer */
   dataBuffer: ArrayBuffer;
-  
+
   /** Metadata buffer (64 bytes) */
   metadataBuffer: ArrayBuffer;
 }
@@ -42,31 +42,31 @@ export interface SharedMemoryLayout {
 export interface MemoryHeader {
   /** Magic number (4 bytes): 0x53494C43 ('SILC') */
   magicNumber: number;
-  
+
   /** Protocol version (4 bytes) */
   version: number;
-  
+
   /** Window ID (8 bytes) */
   windowId: bigint;
-  
+
   /** Actual data length (4 bytes) */
   dataLength: number;
-  
+
   /** Data integrity checksum (4 bytes) */
   checksum: number;
-  
+
   /** Last modification timestamp (8 bytes) */
   timestamp: bigint;
-  
+
   /** Current writer identifier (8 bytes) */
   writerId: bigint;
-  
+
   /** Active reader count (4 bytes) */
   readerCount: number;
-  
+
   /** Status and control flags (4 bytes) */
   flags: number;
-  
+
   /** Reserved for future use (16 bytes) */
   reserved: ArrayBuffer;
 }
@@ -82,7 +82,7 @@ export interface MemorySynchronization {
     hazardPointers: boolean;
     epochBasedReclamation: boolean;
   };
-  
+
   /** Producer-consumer coordination */
   coordination: {
     ringBuffer: boolean;
@@ -90,7 +90,7 @@ export interface MemorySynchronization {
     multipleConsumers: boolean;
     backpressure: 'adaptive_rate_limiting';
   };
-  
+
   /** Conflict resolution strategies */
   conflicts: {
     writerConflict: 'first_writer_wins';
@@ -106,13 +106,13 @@ export interface MemorySynchronization {
 export interface MemoryAllocationConfig {
   /** Buffer type */
   bufferType: 'SharedArrayBuffer';
-  
+
   /** Memory alignment (cache line) */
   alignment: number;
-  
+
   /** Enable guard pages for protection */
   guardPages: boolean;
-  
+
   /** Initialize memory to zero */
   zeroInitialization: boolean;
 }
@@ -123,13 +123,13 @@ export interface MemoryAllocationConfig {
 export interface MemoryAccessControl {
   /** Multiple concurrent readers allowed */
   concurrentReaders: 'unlimited';
-  
+
   /** Single writer at a time */
   exclusiveWriter: boolean;
-  
+
   /** Locking mechanism */
   lockingMechanism: 'atomic_operations';
-  
+
   /** Timeout in milliseconds */
   timeoutHandling: number;
 }
@@ -140,21 +140,21 @@ export interface MemoryAccessControl {
 export enum MemoryWindowFlags {
   /** Window is locked for writing */
   WRITE_LOCKED = 0x01,
-  
+
   /** Window has been modified */
   DIRTY = 0x02,
-  
+
   /** Window is ready for reading */
   READY = 0x04,
-  
+
   /** Window is being resized */
   RESIZING = 0x08,
-  
+
   /** Window data is corrupted */
   CORRUPTED = 0x10,
-  
+
   /** Window is marked for deletion */
-  PENDING_DELETE = 0x20
+  PENDING_DELETE = 0x20,
 }
 
 /**
@@ -163,19 +163,19 @@ export enum MemoryWindowFlags {
 export interface MemoryPoolConfig {
   /** Pool name */
   name: string;
-  
+
   /** Number of pre-allocated buffers */
   poolSize: number;
-  
+
   /** Size of each buffer */
   bufferSize: number;
-  
+
   /** Pool growth strategy */
   growthStrategy: 'exponential' | 'linear' | 'fixed';
-  
+
   /** Pool shrinking strategy */
   shrinkStrategy: 'idle_based' | 'never' | 'aggressive';
-  
+
   /** Zero memory on return */
   zeroOnReturn: boolean;
 }
@@ -193,22 +193,25 @@ export interface MemoryMetrics {
     allocationRate: number;
     deallocationRate: number;
   };
-  
+
   /** Pool utilization */
-  pools: Map<string, {
-    utilized: number;
-    available: number;
-    hitRate: number;
-    missRate: number;
-  }>;
-  
+  pools: Map<
+    string,
+    {
+      utilized: number;
+      available: number;
+      hitRate: number;
+      missRate: number;
+    }
+  >;
+
   /** Fragmentation metrics */
   fragmentation: {
     level: number;
     largestFreeBlock: number;
     totalFreeSpace: number;
   };
-  
+
   /** Performance metrics */
   performance: {
     averageAllocationTime: number;
@@ -238,31 +241,31 @@ export interface MemoryOperationResult<T = void> {
 export interface ISharedMemoryWindow {
   /** Window identifier */
   readonly id: bigint;
-  
+
   /** Window size in bytes */
   readonly size: number;
-  
+
   /** Window status flags */
   readonly flags: number;
-  
+
   /** Acquire write lock */
   acquireWriteLock(timeout?: number): Promise<boolean>;
-  
+
   /** Release write lock */
   releaseWriteLock(): void;
-  
+
   /** Write data to window */
   write(data: Uint8Array, offset?: number): Promise<MemoryOperationResult>;
-  
+
   /** Read data from window */
   read(length?: number, offset?: number): Promise<MemoryOperationResult<Uint8Array>>;
-  
+
   /** Resize window */
   resize(newSize: number): Promise<MemoryOperationResult>;
-  
+
   /** Get window metrics */
   getMetrics(): MemoryMetrics;
-  
+
   /** Destroy window */
   destroy(): Promise<void>;
 }

@@ -1,6 +1,6 @@
 /**
  * SILC Protocol Utility Functions
- * 
+ *
  * Mathematical constants, signal utilities, and performance helpers
  * for the SILC protocol implementation.
  */
@@ -12,23 +12,25 @@ export const MathConstants = {
   // Golden ratio and related values
   PHI: 1.618033988749,
   PHI_INVERSE: 0.618033988749,
-  
+
   // Mathematical constants
   PI: Math.PI,
   E: Math.E,
   SQRT_2: Math.SQRT2,
   SQRT_3: 1.732050807568,
-  
+
   // Fibonacci sequence (first 20 numbers)
-  FIBONACCI: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765],
-  
+  FIBONACCI: [
+    1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765,
+  ],
+
   // Common mathematical ratios
   RATIOS: {
     GOLDEN: 1.618033988749,
     SILVER: 2.414213562373,
     BRONZE: 3.302775637732,
-    PLASTIC: 1.324717957245
-  }
+    PLASTIC: 1.324717957245,
+  },
 } as const;
 
 /**
@@ -52,8 +54,8 @@ export class SignalUtils {
         MathConstants.PHI,
         MathConstants.PHI_INVERSE,
         MathConstants.PHI - 1,
-        1 / (MathConstants.PHI + 1)
-      ]
+        1 / (MathConstants.PHI + 1),
+      ],
     };
   }
 
@@ -62,12 +64,12 @@ export class SignalUtils {
    */
   public static createFibonacciHarmonics(count: number = 8): number[] {
     const harmonics: number[] = [];
-    
+
     for (let i = 0; i < Math.min(count, MathConstants.FIBONACCI.length - 1); i++) {
       const ratio = (MathConstants.FIBONACCI[i + 1] ?? 1) / (MathConstants.FIBONACCI[i] ?? 1);
       harmonics.push(ratio);
     }
-    
+
     return harmonics;
   }
 
@@ -81,19 +83,19 @@ export class SignalUtils {
     harmonics?: number[];
   }): number {
     let complexity = 1.0;
-    
+
     // Base complexity from main signal
     complexity += Math.abs(signal.amplitude - 0.5) * 0.5; // Deviation from neutral
     complexity += signal.frequency * 0.1; // Frequency contributes to complexity
-    complexity += Math.abs(signal.phase) / Math.PI * 0.3; // Phase complexity
-    
+    complexity += (Math.abs(signal.phase) / Math.PI) * 0.3; // Phase complexity
+
     // Harmonic complexity
     if (signal.harmonics && signal.harmonics.length > 0) {
       const harmonicVariance = this.calculateVariance(signal.harmonics);
       complexity += harmonicVariance * 0.5;
       complexity += signal.harmonics.length * 0.1;
     }
-    
+
     return Math.max(0, Math.min(10, complexity)); // Clamp to 0-10 range
   }
 
@@ -102,9 +104,9 @@ export class SignalUtils {
    */
   public static calculateVariance(values: number[]): number {
     if (values.length === 0) return 0;
-    
+
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squaredDiffs = values.map(val => (val - mean) ** 2);
+    const squaredDiffs = values.map((val) => (val - mean) ** 2);
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
   }
 
@@ -125,8 +127,8 @@ export class SignalUtils {
     const normalized = {
       amplitude: Math.max(0, Math.min(1, signal.amplitude)),
       frequency: Math.max(0, Math.min(7, Math.round(signal.frequency))),
-      phase: ((signal.phase % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI),
-      harmonics: signal.harmonics?.map(h => Math.max(-10, Math.min(10, h)))
+      phase: ((signal.phase % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI),
+      harmonics: signal.harmonics?.map((h) => Math.max(-10, Math.min(10, h))),
     };
 
     // Quantize phase to canonical values if close
@@ -143,7 +145,7 @@ export class SignalUtils {
   public static areSimilar(
     signal1: { amplitude: number; frequency: number; phase: number },
     signal2: { amplitude: number; frequency: number; phase: number },
-    tolerance: number = 0.1
+    tolerance: number = 0.1,
   ): boolean {
     return (
       Math.abs(signal1.amplitude - signal2.amplitude) <= tolerance &&
@@ -165,12 +167,12 @@ export class SignalUtils {
     const phi = MathConstants.PHI;
     const random1 = (Math.random() * phi) % 1;
     const random2 = (Math.random() * phi) % 1;
-    
+
     return {
       amplitude: 0.3 + random1 * 0.7, // Bias towards higher confidence
       frequency: Math.floor(random2 * 8), // Random frequency band
       phase: Math.random() < 0.8 ? 0 : Math.PI, // Mostly in-phase
-      harmonics: Math.random() < 0.3 ? this.createFibonacciHarmonics(4) : undefined
+      harmonics: Math.random() < 0.3 ? this.createFibonacciHarmonics(4) : undefined,
     };
   }
 }
@@ -202,7 +204,7 @@ export class PerformanceUtils {
 
     const startTime = measurements.pop()!;
     const duration = performance.now() - startTime;
-    
+
     return duration;
   }
 
@@ -211,26 +213,26 @@ export class PerformanceUtils {
    */
   public static async measure<T>(
     operation: () => Promise<T> | T,
-    key?: string
+    key?: string,
   ): Promise<{ result: T; duration: number }> {
     const startTime = performance.now();
-    
+
     try {
       const result = await operation();
       const duration = performance.now() - startTime;
-      
+
       if (key) {
         this.recordMeasurement(key, duration);
       }
-      
+
       return { result, duration };
     } catch (error) {
       const duration = performance.now() - startTime;
-      
+
       if (key) {
         this.recordMeasurement(`${key}_error`, duration);
       }
-      
+
       throw error;
     }
   }
@@ -242,10 +244,10 @@ export class PerformanceUtils {
     if (!this.measurements.has(key)) {
       this.measurements.set(key, []);
     }
-    
+
     const measurements = this.measurements.get(key)!;
     measurements.push(duration);
-    
+
     // Keep only last 1000 measurements
     if (measurements.length > 1000) {
       measurements.shift();
@@ -271,7 +273,7 @@ export class PerformanceUtils {
 
     const sorted = [...measurements].sort((a, b) => a - b);
     const count = sorted.length;
-    
+
     return {
       count,
       min: sorted[0] ?? 0,
@@ -279,7 +281,7 @@ export class PerformanceUtils {
       mean: sorted.reduce((sum, val) => sum + val, 0) / count,
       median: sorted[Math.floor(count / 2)] ?? 0,
       p95: sorted[Math.floor(count * 0.95)] ?? 0,
-      p99: sorted[Math.floor(count * 0.99)] ?? 0
+      p99: sorted[Math.floor(count * 0.99)] ?? 0,
     };
   }
 
@@ -302,7 +304,8 @@ export class PerformanceUtils {
  * Utility for working with Base64 signal encoding
  */
 export class Base64Utils {
-  private static readonly BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  private static readonly BASE64_CHARS =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
   /**
    * Get the index of a Base64 character

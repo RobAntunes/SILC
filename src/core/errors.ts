@@ -1,11 +1,12 @@
 /**
  * SILC Protocol Error System
- * 
+ *
  * Comprehensive error handling for the SILC protocol with categorization,
  * severity levels, and context tracking.
  */
 
-import { SILCErrorCategory, ErrorSeverity } from '../types/common.types';
+import type { ErrorSeverity } from '../types/common.types';
+import { SILCErrorCategory } from '../types/common.types';
 
 /**
  * SILC Protocol Error Class
@@ -22,10 +23,10 @@ export class SILCError extends Error {
     category: SILCErrorCategory,
     severity: ErrorSeverity,
     code: number,
-    context: Record<string, unknown> = {}
+    context: Record<string, unknown> = {},
   ) {
     super(message);
-    
+
     this.name = 'SILCError';
     this.category = category;
     this.severity = severity;
@@ -47,19 +48,16 @@ export class SILCError extends Error {
     category: SILCErrorCategory,
     severity: ErrorSeverity,
     code: number,
-    context: Record<string, unknown> = {}
+    context: Record<string, unknown> = {},
   ): SILCError {
-    const silcError = new SILCError(
-      error.message,
-      category,
-      severity,
-      code,
-      { originalError: error.name, ...context }
-    );
-    
+    const silcError = new SILCError(error.message, category, severity, code, {
+      originalError: error.name,
+      ...context,
+    });
+
     // Preserve original stack trace
     silcError.stack = error.stack;
-    
+
     return silcError;
   }
 
@@ -75,7 +73,7 @@ export class SILCError extends Error {
       code: this.code,
       context: this.context,
       timestamp: this.timestamp,
-      stack: this.stack
+      stack: this.stack,
     };
   }
 
@@ -83,10 +81,9 @@ export class SILCError extends Error {
    * Get error description with context
    */
   public getDescription(): string {
-    const contextStr = Object.keys(this.context).length > 0 
-      ? ` (Context: ${JSON.stringify(this.context)})`
-      : '';
-    
+    const contextStr =
+      Object.keys(this.context).length > 0 ? ` (Context: ${JSON.stringify(this.context)})` : '';
+
     return `[${this.category}:${this.code}] ${this.message}${contextStr}`;
   }
 
@@ -101,7 +98,7 @@ export class SILCError extends Error {
     const nonRecoverableCategories = [
       'protocol.version_mismatch',
       'system.hardware_failure',
-      'system.termination'
+      'system.termination',
     ];
 
     return !nonRecoverableCategories.includes(this.category);
@@ -112,12 +109,18 @@ export class SILCError extends Error {
    */
   public getRetryDelay(): number {
     switch (this.severity) {
-      case 4: return -1; // Critical - no retry
-      case 3: return 5000; // High - 5 seconds
-      case 2: return 2000; // Medium - 2 seconds
-      case 1: return 1000; // Low - 1 second
-      case 0: return 500;  // Info - 500ms
-      default: return 1000;
+      case 4:
+        return -1; // Critical - no retry
+      case 3:
+        return 5000; // High - 5 seconds
+      case 2:
+        return 2000; // Medium - 2 seconds
+      case 1:
+        return 1000; // Low - 1 second
+      case 0:
+        return 500; // Info - 500ms
+      default:
+        return 1000;
     }
   }
 }
@@ -135,7 +138,7 @@ export class ErrorFactory {
       SILCErrorCategory.SIGNAL_CORRUPTION,
       3, // High severity
       201,
-      context
+      context,
     );
   }
 
@@ -148,7 +151,7 @@ export class ErrorFactory {
       SILCErrorCategory.INVALID_SIGNAL_PARAMETERS,
       3, // High severity
       200,
-      context
+      context,
     );
   }
 
@@ -161,7 +164,7 @@ export class ErrorFactory {
       SILCErrorCategory.INSUFFICIENT_MEMORY,
       4, // Critical severity
       300,
-      context
+      context,
     );
   }
 
@@ -174,7 +177,7 @@ export class ErrorFactory {
       SILCErrorCategory.TRANSMISSION_TIMEOUT,
       2, // Medium severity
       400,
-      context
+      context,
     );
   }
 
@@ -187,7 +190,7 @@ export class ErrorFactory {
       SILCErrorCategory.DIALECT_INCOMPATIBILITY,
       2, // Medium severity
       500,
-      context
+      context,
     );
   }
 
@@ -200,7 +203,7 @@ export class ErrorFactory {
       SILCErrorCategory.PROTOCOL_VERSION_MISMATCH,
       3, // High severity
       100,
-      context
+      context,
     );
   }
 
@@ -213,7 +216,7 @@ export class ErrorFactory {
       SILCErrorCategory.RESOURCE_EXHAUSTION,
       3, // High severity
       600,
-      context
+      context,
     );
   }
 
@@ -226,7 +229,7 @@ export class ErrorFactory {
       SILCErrorCategory.INVALID_MESSAGE_FORMAT,
       3, // High severity
       101,
-      context
+      context,
     );
   }
 }
@@ -248,26 +251,22 @@ export class ErrorHandler {
   public async handle<T>(
     operation: () => Promise<T>,
     errorKey: string,
-    onError?: (error: SILCError, attempt: number) => void
+    onError?: (error: SILCError, attempt: number) => void,
   ): Promise<T> {
     const attempts = this.retryCount.get(errorKey) ?? 0;
 
     try {
       const result = await operation();
-      
+
       // Reset retry count on success
       this.retryCount.delete(errorKey);
-      
+
       return result;
     } catch (error) {
-      const silcError = error instanceof SILCError 
-        ? error 
-        : SILCError.fromError(
-            error as Error,
-            SILCErrorCategory.UNEXPECTED_TERMINATION,
-            2,
-            603
-          );
+      const silcError =
+        error instanceof SILCError
+          ? error
+          : SILCError.fromError(error as Error, SILCErrorCategory.UNEXPECTED_TERMINATION, 2, 603);
 
       // Call error callback
       if (onError) {
@@ -277,13 +276,13 @@ export class ErrorHandler {
       // Check if we should retry
       if (attempts < this.maxRetries && silcError.isRecoverable()) {
         this.retryCount.set(errorKey, attempts + 1);
-        
+
         // Wait before retry
         const delay = silcError.getRetryDelay();
         if (delay > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
-        
+
         // Recursive retry
         return this.handle(operation, errorKey, onError);
       }

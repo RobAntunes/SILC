@@ -2,7 +2,7 @@
  * Memory management utility functions
  */
 
-import type { MemoryWindowConfig, MemoryPoolConfig } from '../types/memory.types';
+import type { MemoryPoolConfig, MemoryWindowConfig } from '../types/memory.types';
 import { MemoryManager } from './manager';
 
 /**
@@ -10,33 +10,33 @@ import { MemoryManager } from './manager';
  */
 export function createMemoryManager(config?: Partial<MemoryWindowConfig>): MemoryManager {
   const manager = new MemoryManager(config);
-  
+
   // Create default pools
   manager.createPool({
     name: 'small',
     poolSize: 100,
-    bufferSize: 1024,     // 1KB buffers
+    bufferSize: 1024, // 1KB buffers
     growthStrategy: 'exponential',
     shrinkStrategy: 'idle_based',
-    zeroOnReturn: true
+    zeroOnReturn: true,
   });
 
   manager.createPool({
     name: 'medium',
     poolSize: 50,
-    bufferSize: 4096,     // 4KB buffers
+    bufferSize: 4096, // 4KB buffers
     growthStrategy: 'linear',
     shrinkStrategy: 'idle_based',
-    zeroOnReturn: true
+    zeroOnReturn: true,
   });
 
   manager.createPool({
     name: 'large',
     poolSize: 10,
-    bufferSize: 65536,    // 64KB buffers
+    bufferSize: 65536, // 64KB buffers
     growthStrategy: 'linear',
     shrinkStrategy: 'aggressive',
-    zeroOnReturn: true
+    zeroOnReturn: true,
   });
 
   return manager;
@@ -49,7 +49,7 @@ export function createMemoryPool(
   name: string,
   size: number,
   count: number,
-  options?: Partial<MemoryPoolConfig>
+  options?: Partial<MemoryPoolConfig>,
 ): MemoryPoolConfig {
   return {
     name,
@@ -58,7 +58,7 @@ export function createMemoryPool(
     growthStrategy: 'exponential',
     shrinkStrategy: 'idle_based',
     zeroOnReturn: true,
-    ...options
+    ...options,
   };
 }
 
@@ -68,21 +68,21 @@ export function createMemoryPool(
 export function calculateOptimalWindowSize(
   signalCount: number,
   averageSignalSize: number,
-  includeMetadata: boolean = true
+  includeMetadata: boolean = true,
 ): number {
   const HEADER_SIZE = 64;
   const METADATA_SIZE = includeMetadata ? 64 : 0;
   const CACHE_LINE_SIZE = 64;
-  
+
   // Calculate raw size needed
   const rawSize = signalCount * averageSignalSize;
-  
+
   // Add protocol overhead
   const totalSize = HEADER_SIZE + rawSize + METADATA_SIZE;
-  
+
   // Align to cache line boundaries
   const alignedSize = Math.ceil(totalSize / CACHE_LINE_SIZE) * CACHE_LINE_SIZE;
-  
+
   // Round up to power of 2 for optimal memory allocation
   return Math.pow(2, Math.ceil(Math.log2(alignedSize)));
 }
@@ -94,12 +94,12 @@ export function formatMemorySize(bytes: number): string {
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;
   let unitIndex = 0;
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024;
     unitIndex++;
   }
-  
+
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
 
@@ -107,8 +107,7 @@ export function formatMemorySize(bytes: number): string {
  * Check if SharedArrayBuffer is available
  */
 export function isSharedMemoryAvailable(): boolean {
-  return typeof SharedArrayBuffer !== 'undefined' && 
-         typeof Atomics !== 'undefined';
+  return typeof SharedArrayBuffer !== 'undefined' && typeof Atomics !== 'undefined';
 }
 
 /**
@@ -117,6 +116,6 @@ export function isSharedMemoryAvailable(): boolean {
 export function getCrossOriginIsolationHeaders(): Record<string, string> {
   return {
     'Cross-Origin-Opener-Policy': 'same-origin',
-    'Cross-Origin-Embedder-Policy': 'require-corp'
+    'Cross-Origin-Embedder-Policy': 'require-corp',
   };
 }

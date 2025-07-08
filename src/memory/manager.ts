@@ -1,16 +1,16 @@
 /**
  * Memory Manager for SILC Protocol
- * 
+ *
  * Manages shared memory windows, pools, and provides
  * cache-optimized memory allocation strategies.
  */
 
 import type {
-  MemoryWindowConfig,
-  MemoryPoolConfig,
+  ISharedMemoryWindow,
   MemoryMetrics,
   MemoryOperationResult,
-  ISharedMemoryWindow
+  MemoryPoolConfig,
+  MemoryWindowConfig,
 } from '../types/memory.types';
 import { SharedMemoryWindow } from './shared-window';
 
@@ -35,7 +35,7 @@ class MemoryPool {
     hits: 0,
     misses: 0,
     allocations: 0,
-    deallocations: 0
+    deallocations: 0,
   };
 
   constructor(config: MemoryPoolConfig) {
@@ -52,7 +52,7 @@ class MemoryPool {
       windowCount: this.config.poolSize,
       adaptiveResize: false,
       resizeIncrement: 0,
-      maxWindowSize: this.config.bufferSize
+      maxWindowSize: this.config.bufferSize,
     };
 
     for (let i = 0; i < this.config.poolSize; i++) {
@@ -66,13 +66,13 @@ class MemoryPool {
   acquire(): SharedMemoryWindow | null {
     if (this.freeWindows.length === 0) {
       this.metrics.misses++;
-      
+
       // Handle growth strategy
       if (this.config.growthStrategy !== 'fixed') {
         this.grow();
         return this.freeWindows.pop() ?? null;
       }
-      
+
       return null;
     }
 
@@ -80,7 +80,7 @@ class MemoryPool {
     this.usedWindows.add(window.id);
     this.metrics.hits++;
     this.metrics.allocations++;
-    
+
     return window;
   }
 
@@ -93,7 +93,7 @@ class MemoryPool {
     }
 
     this.usedWindows.delete(window.id);
-    
+
     // Zero memory if configured
     if (this.config.zeroOnReturn) {
       // Window will handle zeroing in its write method
@@ -116,7 +116,7 @@ class MemoryPool {
    */
   private grow(): void {
     let growthSize = 0;
-    
+
     switch (this.config.growthStrategy) {
       case 'exponential':
         growthSize = Math.ceil(this.config.poolSize * 0.5);
@@ -131,7 +131,7 @@ class MemoryPool {
       windowCount: growthSize,
       adaptiveResize: false,
       resizeIncrement: 0,
-      maxWindowSize: this.config.bufferSize
+      maxWindowSize: this.config.bufferSize,
     };
 
     for (let i = 0; i < growthSize; i++) {
@@ -148,7 +148,7 @@ class MemoryPool {
     }
 
     const utilization = this.usedWindows.size / (this.freeWindows.length + this.usedWindows.size);
-    
+
     switch (this.config.shrinkStrategy) {
       case 'idle_based':
         return utilization < 0.25 && this.freeWindows.length > this.config.poolSize;
@@ -167,7 +167,7 @@ class MemoryPool {
       utilized: this.usedWindows.size,
       available: this.freeWindows.length,
       hitRate: this.metrics.hits / (this.metrics.hits + this.metrics.misses),
-      missRate: this.metrics.misses / (this.metrics.hits + this.metrics.misses)
+      missRate: this.metrics.misses / (this.metrics.hits + this.metrics.misses),
     };
   }
 
@@ -177,9 +177,9 @@ class MemoryPool {
   async destroy(): Promise<void> {
     // Destroy all windows
     const allWindows = [...this.freeWindows];
-    
-    await Promise.all(allWindows.map(w => w.destroy()));
-    
+
+    await Promise.all(allWindows.map((w) => w.destroy()));
+
     this.freeWindows.length = 0;
     this.usedWindows.clear();
   }
@@ -202,11 +202,11 @@ export class MemoryManager {
       adaptiveResize: true,
       resizeIncrement: 4096,
       maxWindowSize: 1048576, // 1MB
-      ...defaultConfig
+      ...defaultConfig,
     };
 
     this.globalMetrics = this.initializeMetrics();
-    
+
     // Start cleanup task
     this.cleanupInterval = setInterval(() => this.cleanup(), 60000); // Every minute
   }
@@ -226,8 +226,8 @@ export class MemoryManager {
    * Allocate a new shared memory window
    */
   async allocateWindow(
-    size?: number, 
-    poolName?: string
+    size?: number,
+    poolName?: string,
   ): Promise<MemoryOperationResult<ISharedMemoryWindow>> {
     const startTime = performance.now();
 
@@ -243,7 +243,7 @@ export class MemoryManager {
       if (!window) {
         const config = {
           ...this.defaultConfig,
-          windowSize: size ?? this.defaultConfig.windowSize
+          windowSize: size ?? this.defaultConfig.windowSize,
         };
         window = new SharedMemoryWindow(config);
       }
@@ -253,7 +253,7 @@ export class MemoryManager {
         window,
         lastAccessed: Date.now(),
         accessCount: 0,
-        poolName
+        poolName,
       });
 
       // Update metrics
@@ -261,7 +261,7 @@ export class MemoryManager {
       this.globalMetrics.allocation.currentAllocated++;
       this.globalMetrics.allocation.peakAllocated = Math.max(
         this.globalMetrics.allocation.peakAllocated,
-        this.globalMetrics.allocation.currentAllocated
+        this.globalMetrics.allocation.currentAllocated,
       );
 
       return {
@@ -270,13 +270,13 @@ export class MemoryManager {
         metrics: {
           duration: performance.now() - startTime,
           retries: 0,
-          bytesProcessed: window.size
-        }
+          bytesProcessed: window.size,
+        },
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -286,11 +286,11 @@ export class MemoryManager {
    */
   async getWindow(windowId: bigint): Promise<MemoryOperationResult<ISharedMemoryWindow>> {
     const entry = this.windows.get(windowId);
-    
+
     if (!entry) {
       return {
         success: false,
-        error: 'Window not found'
+        error: 'Window not found',
       };
     }
 
@@ -300,7 +300,7 @@ export class MemoryManager {
 
     return {
       success: true,
-      data: entry.window
+      data: entry.window,
     };
   }
 
@@ -309,11 +309,11 @@ export class MemoryManager {
    */
   async releaseWindow(windowId: bigint): Promise<MemoryOperationResult> {
     const entry = this.windows.get(windowId);
-    
+
     if (!entry) {
       return {
         success: false,
-        error: 'Window not found'
+        error: 'Window not found',
       };
     }
 
@@ -348,10 +348,9 @@ export class MemoryManager {
 
     // Calculate fragmentation
     const totalWindows = this.windows.size;
-    const activeWindows = Array.from(this.windows.values())
-      .filter(e => e.accessCount > 0).length;
-    
-    this.globalMetrics.fragmentation.level = 
+    const activeWindows = Array.from(this.windows.values()).filter((e) => e.accessCount > 0).length;
+
+    this.globalMetrics.fragmentation.level =
       totalWindows > 0 ? (totalWindows - activeWindows) / totalWindows : 0;
 
     return { ...this.globalMetrics };
@@ -382,20 +381,20 @@ export class MemoryManager {
         currentAllocated: 0,
         peakAllocated: 0,
         allocationRate: 0,
-        deallocationRate: 0
+        deallocationRate: 0,
       },
       pools: new Map(),
       fragmentation: {
         level: 0,
         largestFreeBlock: 0,
-        totalFreeSpace: 0
+        totalFreeSpace: 0,
       },
       performance: {
         averageAllocationTime: 0,
         averageDeallocationTime: 0,
         cacheMisses: 0,
-        pageFlushes: 0
-      }
+        pageFlushes: 0,
+      },
     };
   }
 
@@ -409,14 +408,10 @@ export class MemoryManager {
     }
 
     // Destroy all pools
-    await Promise.all(
-      Array.from(this.pools.values()).map(pool => pool.destroy())
-    );
+    await Promise.all(Array.from(this.pools.values()).map((pool) => pool.destroy()));
 
     // Destroy all windows
-    await Promise.all(
-      Array.from(this.windows.values()).map(entry => entry.window.destroy())
-    );
+    await Promise.all(Array.from(this.windows.values()).map((entry) => entry.window.destroy()));
 
     this.windows.clear();
     this.pools.clear();

@@ -2,7 +2,7 @@
  * Unit tests for SILC Signal Encoder
  */
 
-import { SignalEncoder, MathConstants } from './encoder';
+import { MathConstants, SignalEncoder } from './encoder';
 import type { ISILCSignal } from '@types/signal.types';
 
 describe('SignalEncoder', () => {
@@ -17,7 +17,7 @@ describe('SignalEncoder', () => {
       const signal: ISILCSignal = {
         amplitude: 0.75,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(signal, 'base64');
@@ -33,7 +33,7 @@ describe('SignalEncoder', () => {
         amplitude: 0.618,
         frequency: 1,
         phase: 0,
-        harmonics: [1.618, 0.382]
+        harmonics: [1.618, 0.382],
       };
 
       const encoded = encoder.encode(signal, 'base64');
@@ -47,7 +47,7 @@ describe('SignalEncoder', () => {
         const signal: ISILCSignal = {
           amplitude: 0.5,
           frequency,
-          phase: 0
+          phase: 0,
         };
 
         const encoded = encoder.encode(signal, 'base64');
@@ -60,13 +60,13 @@ describe('SignalEncoder', () => {
       const signalInPhase: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const signalOutPhase: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: Math.PI
+        phase: Math.PI,
       };
 
       const encodedIn = encoder.encode(signalInPhase, 'base64');
@@ -82,7 +82,7 @@ describe('SignalEncoder', () => {
         amplitude: 0.12345,
         frequency: 2,
         phase: 1.5708, // π/2
-        harmonics: [2.718, 1.414]
+        harmonics: [2.718, 1.414],
       };
 
       const encoded = encoder.encode(signal, 'ieee754');
@@ -97,7 +97,7 @@ describe('SignalEncoder', () => {
       const signal: ISILCSignal = {
         amplitude: 1.0,
         frequency: 7,
-        phase: Math.PI
+        phase: Math.PI,
       };
 
       const encoded = encoder.encode(signal, 'binary');
@@ -113,14 +113,14 @@ describe('SignalEncoder', () => {
         amplitude: 0.75,
         frequency: 4,
         phase: 0,
-        harmonics: [1, 2, 3]
+        harmonics: [1, 2, 3],
       };
 
       const encoded = encoder.encode(signal, 'json');
 
       expect(encoded.encoding.method).toBe('json');
       expect(() => JSON.parse(encoded.encoded)).not.toThrow();
-      
+
       const parsed = JSON.parse(encoded.encoded);
       expect(parsed).toEqual(signal);
     });
@@ -144,7 +144,7 @@ describe('SignalEncoder', () => {
       const signal: ISILCSignal = {
         amplitude: 1.5, // Invalid - greater than 1
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       expect(() => encoder.encode(signal)).toThrow(/amplitude/i);
@@ -154,7 +154,7 @@ describe('SignalEncoder', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 8, // Invalid - greater than 7
-        phase: 0
+        phase: 0,
       };
 
       expect(() => encoder.encode(signal)).toThrow(/frequency/i);
@@ -165,7 +165,7 @@ describe('SignalEncoder', () => {
         amplitude: 0.5,
         frequency: 3,
         phase: 0,
-        harmonics: new Array(101).fill(1) // Too many harmonics
+        harmonics: new Array(101).fill(1), // Too many harmonics
       };
 
       expect(() => encoder.encode(signal)).toThrow(/harmonics/i);
@@ -176,7 +176,7 @@ describe('SignalEncoder', () => {
         amplitude: 0.5,
         frequency: 3,
         phase: 0,
-        harmonics: [1, NaN, 3] // Invalid NaN value
+        harmonics: [1, NaN, 3], // Invalid NaN value
       };
 
       expect(() => encoder.encode(signal)).toThrow(/harmonic/i);
@@ -186,7 +186,7 @@ describe('SignalEncoder', () => {
   describe('Character Mapping', () => {
     test('should provide character mappings', () => {
       const mapping = SignalEncoder.getCharacterMapping('A');
-      
+
       expect(mapping).toBeDefined();
       expect(mapping!.amplitude).toBe(0.25);
       expect(mapping!.frequency).toBe(0);
@@ -195,7 +195,7 @@ describe('SignalEncoder', () => {
 
     test('should return all 64 characters', () => {
       const characters = SignalEncoder.getAllCharacters();
-      
+
       expect(characters).toHaveLength(64);
       expect(characters).toContain('A');
       expect(characters).toContain('Z');
@@ -209,7 +209,7 @@ describe('SignalEncoder', () => {
 
     test('should have consistent mapping', () => {
       const characters = SignalEncoder.getAllCharacters();
-      
+
       for (const char of characters) {
         const mapping = SignalEncoder.getCharacterMapping(char);
         expect(mapping).toBeDefined();
@@ -225,17 +225,17 @@ describe('SignalEncoder', () => {
   describe('Compression', () => {
     test.skip('should compress harmonics when beneficial', () => {
       const encoder = new SignalEncoder({ compressionLevel: 9 });
-      
+
       // Create signal with large harmonics array
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
         phase: 0,
-        harmonics: new Array(50).fill(0.1) // Repetitive data
+        harmonics: new Array(50).fill(0.1), // Repetitive data
       };
 
       const encoded = encoder.encode(signal, 'base64');
-      
+
       // Should indicate compression was applied
       expect(encoded.encoding.compressionRatio).toBeGreaterThan(1);
     });
@@ -245,11 +245,11 @@ describe('SignalEncoder', () => {
         amplitude: 0.5,
         frequency: 3,
         phase: 0,
-        harmonics: [1, 2] // Small harmonics array
+        harmonics: [1, 2], // Small harmonics array
       };
 
       const encoded = encoder.encode(signal, 'base64');
-      
+
       // Should not apply compression for small signals
       expect(encoded.encoding.compressionRatio).toBeLessThanOrEqual(1.1);
     });
@@ -260,7 +260,7 @@ describe('SignalEncoder', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       expect(() => encoder.encode(signal, 'unsupported' as any)).toThrow(/unsupported/i);
@@ -273,15 +273,15 @@ describe('SignalEncoder', () => {
         amplitude: 0.75,
         frequency: 4,
         phase: 0,
-        harmonics: [1.618, 0.618]
+        harmonics: [1.618, 0.618],
       };
 
       const start = performance.now();
-      
+
       for (let i = 0; i < 1000; i++) {
         encoder.encode(signal, 'base64');
       }
-      
+
       const duration = performance.now() - start;
       expect(duration).toBeLessThan(100); // Should encode 1000 signals in under 100ms
     });

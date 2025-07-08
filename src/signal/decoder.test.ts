@@ -4,7 +4,7 @@
 
 import { SignalEncoder } from './encoder';
 import { SignalDecoder } from './decoder';
-import type { ISILCSignal, EncodedSignal } from '@types/signal.types';
+import type { EncodedSignal, ISILCSignal } from '@types/signal.types';
 
 describe('SignalDecoder', () => {
   let encoder: SignalEncoder;
@@ -20,7 +20,7 @@ describe('SignalDecoder', () => {
       const originalSignal: ISILCSignal = {
         amplitude: 0.75,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(originalSignal, 'base64');
@@ -37,7 +37,7 @@ describe('SignalDecoder', () => {
         amplitude: 0.618,
         frequency: 1,
         phase: 0,
-        harmonics: [1.618, 0.382]
+        harmonics: [1.618, 0.382],
       };
 
       const encoded = encoder.encode(originalSignal, 'base64');
@@ -54,13 +54,13 @@ describe('SignalDecoder', () => {
       const inPhaseSignal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const outPhaseSignal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: Math.PI
+        phase: Math.PI,
       };
 
       const encodedIn = encoder.encode(inPhaseSignal, 'base64');
@@ -80,7 +80,7 @@ describe('SignalDecoder', () => {
         amplitude: 0.12345,
         frequency: 2,
         phase: 1.5708, // π/2
-        harmonics: [2.718, 1.414]
+        harmonics: [2.718, 1.414],
       };
 
       const encoded = encoder.encode(originalSignal, 'ieee754');
@@ -100,7 +100,7 @@ describe('SignalDecoder', () => {
       const originalSignal: ISILCSignal = {
         amplitude: 1.0,
         frequency: 7,
-        phase: Math.PI
+        phase: Math.PI,
       };
 
       const encoded = encoder.encode(originalSignal, 'binary');
@@ -118,7 +118,7 @@ describe('SignalDecoder', () => {
         amplitude: 0.75,
         frequency: 4,
         phase: 0,
-        harmonics: [1, 2, 3]
+        harmonics: [1, 2, 3],
       };
 
       const encoded = encoder.encode(originalSignal, 'json');
@@ -135,12 +135,12 @@ describe('SignalDecoder', () => {
         { amplitude: 0.5, frequency: 3, phase: 0 },
         { amplitude: 0.75, frequency: 5, phase: Math.PI },
         { amplitude: 1.0, frequency: 7, phase: 0 },
-        { 
-          amplitude: 0.618, 
-          frequency: 1, 
-          phase: 0, 
-          harmonics: [1.618, 0.382, 2.618] 
-        }
+        {
+          amplitude: 0.618,
+          frequency: 1,
+          phase: 0,
+          harmonics: [1.618, 0.382, 2.618],
+        },
       ];
 
       for (const originalSignal of testSignals) {
@@ -148,11 +148,12 @@ describe('SignalDecoder', () => {
         const result = decoder.decode(encoded);
 
         // For Base64 encoding, amplitude is quantized (0.618 → 0.5)
-        const expectedAmplitude = originalSignal.amplitude === 0.618 ? 0.5 : originalSignal.amplitude;
+        const expectedAmplitude =
+          originalSignal.amplitude === 0.618 ? 0.5 : originalSignal.amplitude;
         expect(result.signal.amplitude).toBeCloseTo(expectedAmplitude, 1);
         expect(result.signal.frequency).toBe(originalSignal.frequency);
         expect(result.signal.phase).toBeCloseTo(originalSignal.phase, 1);
-        
+
         if (originalSignal.harmonics) {
           expect(result.signal.harmonics).toBeDefined();
           expect(result.signal.harmonics!.length).toBe(originalSignal.harmonics.length);
@@ -165,11 +166,15 @@ describe('SignalDecoder', () => {
         amplitude: 0.8,
         frequency: 4,
         phase: Math.PI,
-        harmonics: [1.414, 2.718]
+        harmonics: [1.414, 2.718],
       };
 
-      const formats: Array<'base64' | 'ieee754' | 'binary' | 'json'> = 
-        ['base64', 'ieee754', 'binary', 'json'];
+      const formats: Array<'base64' | 'ieee754' | 'binary' | 'json'> = [
+        'base64',
+        'ieee754',
+        'binary',
+        'json',
+      ];
 
       for (const format of formats) {
         const encoded = encoder.encode(signal, format);
@@ -189,11 +194,11 @@ describe('SignalDecoder', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(signal, 'base64');
-      
+
       // Should not throw with valid checksum
       expect(() => decoder.decode(encoded)).not.toThrow();
     });
@@ -202,15 +207,15 @@ describe('SignalDecoder', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(signal, 'base64');
-      
+
       // Corrupt the checksum
       const corrupted: EncodedSignal = {
         ...encoded,
-        checksum: 'invalid'
+        checksum: 'invalid',
       };
 
       expect(() => decoder.decode(corrupted)).toThrow(/checksum/i);
@@ -218,19 +223,19 @@ describe('SignalDecoder', () => {
 
     test('should skip checksum validation when disabled', () => {
       const decoder = new SignalDecoder({ validateChecksums: false });
-      
+
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(signal, 'base64');
-      
+
       // Corrupt the checksum
       const corrupted: EncodedSignal = {
         ...encoded,
-        checksum: 'invalid'
+        checksum: 'invalid',
       };
 
       // Should not throw when checksum validation is disabled
@@ -243,7 +248,7 @@ describe('SignalDecoder', () => {
       const validSignal: ISILCSignal = {
         amplitude: 0.8,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(validSignal, 'base64');
@@ -257,13 +262,13 @@ describe('SignalDecoder', () => {
 
     test('should handle validation in strict mode', () => {
       const decoder = new SignalDecoder({ strictMode: true });
-      
+
       // Create an encoded signal with invalid data
       const invalidEncoded: EncodedSignal = {
         signal: { amplitude: 1.5, frequency: 3, phase: 0 }, // Invalid amplitude
         encoded: 'A',
         encoding: { method: 'base64', size: 1 },
-        checksum: '12345678'
+        checksum: '12345678',
       };
 
       expect(() => decoder.decode(invalidEncoded)).toThrow();
@@ -274,7 +279,7 @@ describe('SignalDecoder', () => {
         amplitude: 0.9,
         frequency: 3,
         phase: 0,
-        harmonics: [1.618, 0.618] // Golden ratio harmonics
+        harmonics: [1.618, 0.618], // Golden ratio harmonics
       };
 
       const encoded = encoder.encode(highQualitySignal, 'base64');
@@ -290,14 +295,14 @@ describe('SignalDecoder', () => {
       const signals: ISILCSignal[] = [
         { amplitude: 0.25, frequency: 0, phase: 0 },
         { amplitude: 0.5, frequency: 3, phase: 0 },
-        { amplitude: 0.75, frequency: 7, phase: Math.PI }
+        { amplitude: 0.75, frequency: 7, phase: Math.PI },
       ];
 
-      const encodedSignals = signals.map(signal => encoder.encode(signal, 'base64'));
+      const encodedSignals = signals.map((signal) => encoder.encode(signal, 'base64'));
       const results = decoder.decodeBatch(encodedSignals);
 
       expect(results).toHaveLength(3);
-      
+
       results.forEach((result, index) => {
         expect(result.signal.amplitude).toBeCloseTo(signals[index].amplitude, 1);
         expect(result.signal.frequency).toBe(signals[index].frequency);
@@ -309,25 +314,25 @@ describe('SignalDecoder', () => {
   describe('Format Detection', () => {
     test('should detect JSON format', () => {
       const jsonEncoded = '{"amplitude":0.5,"frequency":3,"phase":0}';
-      
+
       const format = decoder.detectFormat(jsonEncoded);
-      
+
       expect(format).toBe('json');
     });
 
     test('should detect Base64 format', () => {
       const base64Encoded = 'A';
-      
+
       const format = decoder.detectFormat(base64Encoded);
-      
+
       expect(format).toBe('base64');
     });
 
     test('should detect Base64 with harmonics', () => {
       const base64WithHarmonics = 'AHsomething';
-      
+
       const format = decoder.detectFormat(base64WithHarmonics);
-      
+
       expect(format).toBe('base64');
     });
   });
@@ -338,7 +343,7 @@ describe('SignalDecoder', () => {
         signal: { amplitude: 0.5, frequency: 3, phase: 0 },
         encoded: '',
         encoding: { method: 'base64', size: 0 },
-        checksum: 'e3b0c442' // SHA256 hash of empty string
+        checksum: 'e3b0c442', // SHA256 hash of empty string
       };
 
       // Should throw for empty encoded signal
@@ -350,7 +355,7 @@ describe('SignalDecoder', () => {
         signal: { amplitude: 0.5, frequency: 3, phase: 0 },
         encoded: '@', // Invalid Base64 character
         encoding: { method: 'base64', size: 1 },
-        checksum: '12345678'
+        checksum: '12345678',
       };
 
       expect(() => decoder.decode(invalidEncoded)).toThrow();
@@ -361,7 +366,7 @@ describe('SignalDecoder', () => {
         signal: { amplitude: 0.5, frequency: 3, phase: 0 },
         encoded: 'AH!!!invalid!!!', // Corrupted harmonics
         encoding: { method: 'base64', size: 15 },
-        checksum: '12345678'
+        checksum: '12345678',
       };
 
       expect(() => decoder.decode(corruptedEncoded)).toThrow();
@@ -373,7 +378,7 @@ describe('SignalDecoder', () => {
         signal: { amplitude: 0.5, frequency: 3, phase: 0 },
         encoded: 'test',
         encoding: { method: 'unsupported' as any, size: 4 },
-        checksum: '9f86d081' // SHA256 hash of 'test'
+        checksum: '9f86d081', // SHA256 hash of 'test'
       };
 
       expect(() => decoderNoChecksum.decode(unsupportedEncoded)).toThrow(/unsupported/i);
@@ -386,16 +391,16 @@ describe('SignalDecoder', () => {
         amplitude: 0.75,
         frequency: 4,
         phase: 0,
-        harmonics: [1.618, 0.618]
+        harmonics: [1.618, 0.618],
       };
 
       const encoded = encoder.encode(signal, 'base64');
       const start = performance.now();
-      
+
       for (let i = 0; i < 1000; i++) {
         decoder.decode(encoded);
       }
-      
+
       const duration = performance.now() - start;
       expect(duration).toBeLessThan(100); // Should decode 1000 signals in under 100ms
     });
@@ -404,7 +409,7 @@ describe('SignalDecoder', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const encoded = encoder.encode(signal, 'base64');

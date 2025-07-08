@@ -18,7 +18,7 @@ describe('SILCProtocol', () => {
       modelType: 'test-agent',
       instanceId: 'test-001',
       dialectVersion: '1.0.0',
-      capabilities: ['base-spec']
+      capabilities: ['base-spec'],
     };
 
     protocol = new SILCProtocol(TEST_CONFIG);
@@ -32,9 +32,9 @@ describe('SILCProtocol', () => {
   describe('Initialization', () => {
     test('should initialize successfully with config', async () => {
       const newProtocol = new SILCProtocol(TEST_CONFIG);
-      
+
       await expect(newProtocol.initialize()).resolves.not.toThrow();
-      
+
       await newProtocol.shutdown();
     });
 
@@ -44,7 +44,7 @@ describe('SILCProtocol', () => {
 
     test('should load environment configuration by default', () => {
       const defaultProtocol = new SILCProtocol();
-      
+
       expect(defaultProtocol).toBeDefined();
     });
   });
@@ -54,7 +54,7 @@ describe('SILCProtocol', () => {
       const signal = protocol.createSignal({
         amplitude: 0.8,
         frequency: 3,
-        phase: 0
+        phase: 0,
       });
 
       expect(signal.amplitude).toBe(0.8);
@@ -67,34 +67,40 @@ describe('SILCProtocol', () => {
         amplitude: 0.618,
         frequency: 1,
         phase: 0,
-        harmonics: [1.618, 0.382]
+        harmonics: [1.618, 0.382],
       });
 
       expect(signal.harmonics).toEqual([1.618, 0.382]);
     });
 
     test('should validate signal parameters', () => {
-      expect(() => protocol.createSignal({
-        amplitude: 1.5, // Invalid
-        frequency: 3,
-        phase: 0
-      })).toThrow();
+      expect(() =>
+        protocol.createSignal({
+          amplitude: 1.5, // Invalid
+          frequency: 3,
+          phase: 0,
+        }),
+      ).toThrow();
 
-      expect(() => protocol.createSignal({
-        amplitude: 0.5,
-        frequency: 8, // Invalid
-        phase: 0
-      })).toThrow();
+      expect(() =>
+        protocol.createSignal({
+          amplitude: 0.5,
+          frequency: 8, // Invalid
+          phase: 0,
+        }),
+      ).toThrow();
     });
 
     test('should require initialization', () => {
       const uninitializedProtocol = new SILCProtocol(TEST_CONFIG);
-      
-      expect(() => uninitializedProtocol.createSignal({
-        amplitude: 0.5,
-        frequency: 3,
-        phase: 0
-      })).toThrow(/not initialized/i);
+
+      expect(() =>
+        uninitializedProtocol.createSignal({
+          amplitude: 0.5,
+          frequency: 3,
+          phase: 0,
+        }),
+      ).toThrow(/not initialized/i);
     });
   });
 
@@ -103,7 +109,7 @@ describe('SILCProtocol', () => {
       const signal: ISILCSignal = {
         amplitude: 0.7,
         frequency: 4,
-        phase: 0
+        phase: 0,
       };
 
       const result = await protocol.transmit(signal, testAgentId);
@@ -117,7 +123,7 @@ describe('SILCProtocol', () => {
       const signal: ISILCSignal = {
         amplitude: 0.6,
         frequency: 2,
-        phase: 0
+        phase: 0,
       };
 
       const eventPromise = new Promise((resolve) => {
@@ -136,13 +142,13 @@ describe('SILCProtocol', () => {
       const signal: ISILCSignal = {
         amplitude: 0.9,
         frequency: 7,
-        phase: 0
+        phase: 0,
       };
 
       const result = await protocol.transmit(
-        signal, 
-        testAgentId, 
-        SILCMessageType.CONFIDENCE_UPDATE
+        signal,
+        testAgentId,
+        SILCMessageType.CONFIDENCE_UPDATE,
       );
 
       expect(result.success).toBe(true);
@@ -152,17 +158,17 @@ describe('SILCProtocol', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       const beforeMetrics = protocol.getPerformanceMetrics();
-      
+
       await protocol.transmit(signal, testAgentId);
-      
+
       const afterMetrics = protocol.getPerformanceMetrics();
 
       expect(afterMetrics.latency.transmission).toBeGreaterThanOrEqual(
-        beforeMetrics.latency.transmission
+        beforeMetrics.latency.transmission,
       );
     });
   });
@@ -193,7 +199,7 @@ describe('SILCProtocol', () => {
     test('should handle filtered reception', async () => {
       const filter = {
         fromAgent: testAgentId,
-        messageType: SILCMessageType.SIGNAL_TRANSFER
+        messageType: SILCMessageType.SIGNAL_TRANSFER,
       };
 
       const result = await protocol.receive(filter);
@@ -266,12 +272,12 @@ describe('SILCProtocol', () => {
 
     test('should track metrics over time', async () => {
       const initialMetrics = protocol.getPerformanceMetrics();
-      
+
       // Perform some operations
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       await protocol.transmit(signal, testAgentId);
@@ -281,7 +287,7 @@ describe('SILCProtocol', () => {
 
       // Some metrics should have changed
       expect(updatedMetrics.throughput.messagesPerSecond).toBeGreaterThanOrEqual(
-        initialMetrics.throughput.messagesPerSecond
+        initialMetrics.throughput.messagesPerSecond,
       );
     });
   });
@@ -333,7 +339,7 @@ describe('SILCProtocol', () => {
         protocol.createSignal({
           amplitude: 2.0, // Invalid
           frequency: 3,
-          phase: 0
+          phase: 0,
         });
       } catch {
         // Error should be emitted
@@ -346,7 +352,7 @@ describe('SILCProtocol', () => {
       const signal: ISILCSignal = {
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       };
 
       await expect(protocol.transmit(signal, testAgentId)).resolves.toBeDefined();
@@ -361,11 +367,13 @@ describe('SILCProtocol', () => {
     test('should handle operations after shutdown', async () => {
       await protocol.shutdown();
 
-      expect(() => protocol.createSignal({
-        amplitude: 0.5,
-        frequency: 3,
-        phase: 0
-      })).toThrow(/not initialized/i);
+      expect(() =>
+        protocol.createSignal({
+          amplitude: 0.5,
+          frequency: 3,
+          phase: 0,
+        }),
+      ).toThrow(/not initialized/i);
     });
   });
 });
@@ -374,7 +382,7 @@ describe('Helper Functions', () => {
   describe('createSILCProtocol', () => {
     test('should create protocol with default settings', () => {
       const protocol = createSILCProtocol();
-      
+
       expect(protocol).toBeInstanceOf(SILCProtocol);
     });
 
@@ -383,8 +391,8 @@ describe('Helper Functions', () => {
         agentId: {
           namespace: 'custom',
           modelType: 'custom-model',
-          instanceId: 'custom-001'
-        }
+          instanceId: 'custom-001',
+        },
       });
 
       expect(protocol).toBeInstanceOf(SILCProtocol);
@@ -392,7 +400,7 @@ describe('Helper Functions', () => {
 
     test('should create protocol with debug enabled', () => {
       const protocol = createSILCProtocol({
-        debug: true
+        debug: true,
       });
 
       expect(protocol).toBeInstanceOf(SILCProtocol);
@@ -413,7 +421,7 @@ describe('Helper Functions', () => {
     test('should initialize protocol quickly', async () => {
       const protocol = await quickStart({
         namespace: 'quick-test',
-        modelType: 'test-agent'
+        modelType: 'test-agent',
       });
 
       expect(protocol).toBeInstanceOf(SILCProtocol);
@@ -422,7 +430,7 @@ describe('Helper Functions', () => {
       const signal = protocol.createSignal({
         amplitude: 0.5,
         frequency: 3,
-        phase: 0
+        phase: 0,
       });
 
       expect(signal).toBeDefined();
@@ -434,7 +442,7 @@ describe('Helper Functions', () => {
       const protocol = await quickStart({
         namespace: 'quick-test',
         modelType: 'test-agent',
-        instanceId: 'quick-001'
+        instanceId: 'quick-001',
       });
 
       const agentInfo = protocol.getAgentInfo();

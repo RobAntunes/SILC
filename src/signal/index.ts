@@ -1,6 +1,6 @@
 /**
  * SILC Signal Processing Module
- * 
+ *
  * Main entry point for signal processing components including encoding,
  * decoding, validation, and the unified signal processor.
  */
@@ -14,7 +14,7 @@ export type {
   SignalQualityMetrics,
   SignalEncodingFormat,
   HarmonicCoefficients,
-  CompressionInfo
+  CompressionInfo,
 } from '../types/signal.types';
 
 // Re-export individual components
@@ -28,12 +28,17 @@ export { SILCSignal } from './signal';
 /**
  * Simplified signal creation function
  */
-export function createSignal(amplitude: number, frequency: number, phase: number, harmonics?: number[]) {
+export function createSignal(
+  amplitude: number,
+  frequency: number,
+  phase: number,
+  harmonics?: number[],
+) {
   return {
     amplitude,
     frequency,
     phase,
-    harmonics
+    harmonics,
   };
 }
 
@@ -62,7 +67,7 @@ export function createEulerSignal(amplitude: number = 0.718) {
  * Create a pi-based signal for periodic patterns
  */
 export function createPiSignal(amplitude: number = 1.0) {
-  return createSignal(amplitude, 3.141, Math.PI, [3.141, 9.870, 31.006]);
+  return createSignal(amplitude, 3.141, Math.PI, [3.141, 9.87, 31.006]);
 }
 
 /**
