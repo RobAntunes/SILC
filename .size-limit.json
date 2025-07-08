@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Core Bundle",
+    "path": "dist/index.js",
+    "limit": "50 KB"
+  },
+  {
+    "name": "Signal Processing",
+    "path": "dist/signal/index.js",
+    "limit": "20 KB"
+  },
+  {
+    "name": "Protocol Core",
+    "path": "dist/core/protocol.js",
+    "limit": "15 KB"
+  },
+  {
+    "name": "Message Builder",
+    "path": "dist/core/message-builder.js",
+    "limit": "10 KB"
+  },
+  {
+    "name": "Full ESM Bundle",
+    "path": "dist/index.mjs",
+    "import": "*",
+    "limit": "60 KB"
+  }
+]
